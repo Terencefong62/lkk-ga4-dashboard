@@ -275,6 +275,77 @@
       "Use those patterns to plan acquisition and content for <strong>"+esc(trail)+"</strong> and close the gap."
     ];
   }
+  function signedPct(pct){return (pct>=0?"+":"−")+Math.abs(pct).toFixed(1)+"%"}
+  function chinaVolume(key,from,to){let n=0;chinaProfile(key,from,to).daily.forEach(v=>n+=v[0]||0);return n}
+  function significantMarket(pct,sessVol,share){
+    const abs=Math.abs(pct);
+    if(!Number.isFinite(abs)||abs<5)return false;
+    if((share>=0.02||sessVol>=400)&&abs>=8)return true;
+    if(share>=0.01&&sessVol>=200&&abs>=15)return true;
+    if(sessVol>=120&&abs>=50)return true;
+    return false;
+  }
+  function metricFromRows(data,from,to,daily){
+    if(daily){
+      const days=Math.max(1,dayCount(from,to)),map=new Map(data.map(x=>[x.date,x]));
+      return rangeDates(from,to).reduce((n,date)=>n+((map.get(date)||{})[state.metric]||0),0)/days;
+    }
+    if(state.metric==="duration"){
+      const den=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0);
+      return den?data.reduce((n,x)=>n+x.duration*x.sessions,0)/den:0;
+    }
+    if(state.metric==="users")return data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0;
+    return data.reduce((n,x)=>n+(x[state.metric]||0),0);
+  }
+  function pickMarketMovers(startA,endA,startB,endB,daily){
+    const daysB=Math.max(1,dayCount(startB,endB));
+    let totalA=0,totalB=0;
+    const scored=D.domains.map(d=>{
+      const key=keyOf(d),dataA=rows(key,startA,endA),dataB=rows(key,startB,endB);
+      const sessA=dataA.reduce((n,x)=>n+(x.sessions||0),0),sessB=dataB.reduce((n,x)=>n+(x.sessions||0),0);
+      totalA+=sessA;totalB+=sessB;
+      const a=metricFromRows(dataA,startA,endA,daily),b=metricFromRows(dataB,startB,endB,daily);
+      return{key,label:d.label,a,b,sessVol:Math.max(sessA,sessB)};
+    });
+    const totalVol=Math.max(totalA,totalB),up=[],down=[];
+    scored.forEach(m=>{
+      if(!m.a&&!m.b)return;
+      const pct=m.a?((m.b-m.a)/m.a*100):(m.b>0?100:-100);
+      if(!significantMarket(pct,m.sessVol,totalVol?m.sessVol/totalVol:0))return;
+      const delta=m.b-m.a,contribution=state.metric==="duration"?Math.abs(delta)*m.sessVol:state.metric==="users"?Math.abs(delta)*daysB:Math.abs(daily?delta*daysB:delta);
+      const item={key:m.key,label:m.label,pct,contribution,up:delta>=0};
+      (item.up?up:down).push(item);
+    });
+    up.sort((a,b)=>b.contribution-a.contribution);down.sort((a,b)=>b.contribution-a.contribution);
+    const topUp=up.slice(0,3),topDown=down.slice(0,3),ranked=[...topUp,...topDown].sort((a,b)=>b.contribution-a.contribution);
+    const keep=new Set();
+    if(topUp[0])keep.add(topUp[0]);
+    if(topDown[0])keep.add(topDown[0]);
+    ranked.forEach(m=>{if(keep.size<5)keep.add(m)});
+    return{up:topUp.filter(m=>keep.has(m)),down:topDown.filter(m=>keep.has(m))};
+  }
+  function marketObservation(movers){
+    if(!movers||!(movers.up.length||movers.down.length))return"";
+    const bit=list=>list.map(m=>esc(m.label)+" "+signedPct(m.pct)).join(", ");
+    const parts=[];
+    if(movers.up.length)parts.push(bit(movers.up));
+    if(movers.down.length)parts.push(bit(movers.down));
+    return" Significant movers: "+parts.join("; ")+".";
+  }
+  function marketActions(movers,from,to){
+    const items=[];
+    (movers.up||[]).forEach(m=>{
+      items.push("Study <strong>"+esc(m.label)+"</strong>'s Session mix and Top 5 products and recipes to see what is working, then scale those channels.");
+    });
+    (movers.down||[]).forEach(m=>{
+      const china=chinaVolume(m.key,from,to)>=80;
+      items.push("Diagnose the drop in <strong>"+esc(m.label)+"</strong> — check organic search, campaign delivery"+(china?", and bot-like China traffic (see Remarks)":"")+" — and protect remaining channels.");
+    });
+    return items;
+  }
+  function totalFallbackActions(){
+    return["Review Session mix and Top 5 products and recipes across the larger markets to see which channels moved with Total."];
+  }
   function insightHtml(observation,actions){
     return'<div class="insight-part"><h4 class="insight-part-label">Observation(s)</h4><p class="insight-part-body">'+observation+'</p></div><div class="insight-part"><h4 class="insight-part-label">Action Item(s)</h4><ul class="insight-actions">'+actions.map(a=>"<li>"+a+"</li>").join("")+"</ul></div>";
   }
@@ -359,17 +430,33 @@
         return;
       }
       const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,wantUp=Number.isFinite(pct)?pct>=0:true;
-      const picks=Number.isFinite(pct)?driverPicks(state.host,period.start,period.end,state.host,state.start,state.end,wantUp):null;
       const metric=labels[state.metric].toLowerCase();
-      const observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+metric+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+")."+driverObservation(picks,wantUp);
-      const actions=Number.isFinite(pct)?driverActions(picks,wantUp):["Confirm both periods have complete tracking, then compare Session mix and Top 5 content once a percentage is available."];
+      let observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+metric+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+").";
+      let actions;
+      if(isTotal(state.host)){
+        const movers=pickMarketMovers(period.start,period.end,state.start,state.end,false);
+        observation+=marketObservation(movers);
+        actions=Number.isFinite(pct)?((movers.up.length||movers.down.length)?marketActions(movers,period.start,state.end):totalFallbackActions()):["Confirm both periods have complete tracking, then compare Session mix and Top 5 content once a percentage is available."];
+      }else{
+        const picks=Number.isFinite(pct)?driverPicks(state.host,period.start,period.end,state.host,state.start,state.end,wantUp):null;
+        observation+=driverObservation(picks,wantUp);
+        actions=Number.isFinite(pct)?driverActions(picks,wantUp):["Confirm both periods have complete tracking, then compare Session mix and Top 5 content once a percentage is available."];
+      }
       $("#insight").innerHTML=insightHtml(observation,actions);
       return;
     }
     if(compareDomain){
       const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN;
-      const observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period.";
-      const actions=Number.isFinite(pct)?twoDomainActions(domain,compareDomain,pct>=0):["Confirm tracking is complete for both markets, then compare Session mix donuts and Top 5 products and recipes once both sides have data."];
+      let observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period.";
+      let actions=Number.isFinite(pct)?twoDomainActions(domain,compareDomain,pct>=0):["Confirm tracking is complete for both markets, then compare Session mix donuts and Top 5 products and recipes once both sides have data."];
+      if(isTotal(state.host)){
+        const dates=rangeDates(state.start,state.end);
+        if(dates.length>=4){
+          const half=Math.floor(dates.length/2),movers=pickMarketMovers(dates[0],dates[half-1],dates[half],dates[dates.length-1],true);
+          observation+=marketObservation(movers);
+          if(movers.up.length||movers.down.length)actions=marketActions(movers,dates[half],dates[dates.length-1]);
+        }
+      }
       $("#insight").innerHTML=insightHtml(observation,actions);
       return;
     }
@@ -379,6 +466,12 @@
       return;
     }
     const half=Math.floor(data.length/2),a=data.slice(0,half).reduce((n,x)=>n+x[state.metric],0)/half,b=data.slice(half).reduce((n,x)=>n+x[state.metric],0)/(data.length-half),pct=a?((b-a)/a*100):0,word=pct>=0?"up":"down",cutoff=iso(shift(new Date(data[half].date+"T12:00:00"),-1));
+    if(isTotal(state.host)){
+      const movers=pickMarketMovers(state.start,cutoff,data[half].date,state.end,true);
+      const observation="Average daily "+labels[state.metric].toLowerCase()+" for "+esc(domain.label)+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+marketObservation(movers);
+      $("#insight").innerHTML=insightHtml(observation,(movers.up.length||movers.down.length)?marketActions(movers,data[half].date,state.end):totalFallbackActions());
+      return;
+    }
     const picks=driverPicks(state.host,state.start,cutoff,state.host,data[half].date,state.end,pct>=0);
     const observation="Average daily "+labels[state.metric].toLowerCase()+" for "+esc(domain.label)+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+driverObservation(picks,pct>=0);
     $("#insight").innerHTML=insightHtml(observation,driverActions(picks,pct>=0));
