@@ -1,3 +1,7 @@
 # Lee Kum Kee GA4 Dashboard
 
-Static public dashboard generated from the connected GA4 reporting data.
+Public static GA4 dashboard for Lee Kum Kee website performance.
+
+Dashboard: https://terencefong62.github.io/lkk-ga4-dashboard/
+
+The dashboard contains a published analytics snapshot and does not require visitor authentication.
