@@ -164,7 +164,7 @@
     }else if(period){
       $("#chart-title").textContent=domain.label+" vs "+period.label;
       $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" aligned by day in range";
-      $("#legend").innerHTML='<span><i></i>'+dateFmt(state.start)+" – "+dateFmt(state.end)+'</span><span><i class="compare"></i>'+dateFmt(period.start)+" – "+dateFmt(period.end)+'</span>';
+      $("#legend").innerHTML='<span><i></i>'+dateFmt(state.start)+" – "+dateFmt(state.end)+" "+state.start.slice(0,4)+'</span><span><i class="compare"></i>'+dateFmt(period.start)+" – "+dateFmt(period.end)+" "+period.start.slice(0,4)+'</span>';
     }else{
       $("#chart-title").textContent=domain.label+" traffic";
       $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" by day";
@@ -193,7 +193,7 @@
     else html+='<path class="chartline" d="'+path(pts)+'"/>'+pts.map(q=>'<circle class="point hover-target" data-series="'+domain.label+'" data-v="'+q.v+'" data-date="'+q.date+'" cx="'+q.x+'" cy="'+q.y+'" r="3.5"/>').join("");
     if(compareDomain&&state.type!=="bar")html+='<path class="compareline" d="'+path(comparePts)+'"/>'+comparePts.map(q=>'<circle class="comparepoint hover-target" data-series="'+compareDomain.label+'" data-v="'+q.v+'" data-date="'+q.date+'" cx="'+q.x+'" cy="'+q.y+'" r="3"/>').join("");
     const every=Math.max(1,Math.ceil(dates.length/6));dates.forEach((d,i)=>{if(i%every===0||i===dates.length-1){const x=p.l+(dates.length===1?plotW/2:plotW*i/(dates.length-1));html+='<text class="axistext" x="'+x+'" y="'+(h-12)+'" text-anchor="middle">'+dateFmt(d)+'</text>'}});
-    svg.innerHTML=html;const tip=$("#tooltip");svg.querySelectorAll(".hover-target").forEach(el=>{el.addEventListener("pointerenter",e=>{const value=state.metric==="duration"?durationFmt(+el.dataset.v):fmt(+el.dataset.v);tip.innerHTML='<strong>'+el.dataset.series+'</strong><br>'+value+' '+labels[state.metric].toLowerCase()+' · '+dateFmt(el.dataset.date);tip.style.left=e.offsetX+"px";tip.style.top=e.offsetY+"px";tip.style.opacity=1});el.addEventListener("pointerleave",()=>tip.style.opacity=0)})
+    svg.innerHTML=html;const tip=$("#tooltip");svg.querySelectorAll(".hover-target").forEach(el=>{el.addEventListener("pointerenter",e=>{const value=state.metric==="duration"?durationFmt(+el.dataset.v):fmt(+el.dataset.v),tipDate=el.dataset.date,tipFmt=(tipDate&&tipDate.slice(0,4)!==state.start.slice(0,4))?longDate(tipDate):dateFmt(tipDate);tip.innerHTML='<strong>'+el.dataset.series+'</strong><br>'+value+' '+labels[state.metric].toLowerCase()+' · '+tipFmt;tip.style.left=e.offsetX+"px";tip.style.top=e.offsetY+"px";tip.style.opacity=1});el.addEventListener("pointerleave",()=>tip.style.opacity=0)})
   }
   function renderRanking(){
     const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"sessions")})).sort((a,b)=>b.value-a.value).slice(0,5),max=ranked[0]?.value||1;
