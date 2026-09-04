@@ -369,12 +369,12 @@
     $("#focus-content").hidden=false;
     $("#focus-title").textContent="Top 5 products and recipes";
     $("#focus-sub").textContent=domain.label+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
-    $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),false,true);
+    $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true);
     $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true);
   }
   function renderContent(){
     const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"sessions")})).sort((a,b)=>b.value-a.value).slice(0,5);
-    $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,false)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
+    $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,true)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
   }
   $("#domain").addEventListener("change",e=>{state.host=e.target.value;if(state.compare===state.host){state.compare="";$("#compare").value=""}render()});
   $("#compare").addEventListener("change",e=>{state.compare=e.target.value===state.host?"":e.target.value;if(!state.compare)e.target.value="";if(state.compare){state.periodCompare="";$("#period-compare").value=""}render()});
