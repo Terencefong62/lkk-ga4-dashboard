@@ -43,7 +43,7 @@
 <main class="shell">
   <header class="topbar">
     <div class="brand"><img class="brand-mark" src="./images/lkk-logo-corporate.svg" alt="Lee Kum Kee" width="61" height="46"><div><h1>Digital Performance</h1><div class="eyebrow">Lee Kum Kee websites · Google Analytics 4</div></div></div>
-    <div class="live"><span class="dot"></span><span><strong>GA4 connected</strong><span class="desktop-note"> · Zero-time sources and low-engagement China (0–3s) filtered</span></span></div>
+    <div class="live"><span class="dot"></span><span><strong>GA4 connected</strong><span class="desktop-note"> · Bot-like traffic filtered · see Remarks</span></span></div>
   </header>
 
   <section class="toolbar" aria-label="Dashboard controls">
@@ -97,8 +97,8 @@
     <div class="remarks">
       <h2>Remarks</h2>
       <ol>
-        <li>Bot-like traffic on this page is not Google Analytics’ built-in bot filter. It means two dashboard rules: (a) any source/medium whose average session duration is 0:00 in the selected period, and (b) China sessions whose average duration is 0–3 seconds. Rule (b) uses the China-desktop slice when that detail is in the snapshot; on days when remaining time on site is still 0–3 seconds after rule (a), all China sessions that day are also treated as bot-like.</li>
-        <li>Those exclusions apply to sessions, users, page views, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists, and Page / session, are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
+        <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
+        <li>Bot-like traffic is removed from sessions, users, page views, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists, and Page / session, are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
         <li>A domain must be selected before any data is shown.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above.</li>
