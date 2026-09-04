@@ -127,6 +127,25 @@
   }
   function syncDates(){$("#start-date").value=state.start;$("#end-date").value=state.end}
   function metricValue(s){return s[state.metric]}
+  function sumByLabel(records,labels,from,to,bad){
+    const m=new Map();if(!records||!labels)return m;
+    records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=labels[r[1]];if(date<from||date>to||(bad&&bad.has(label)))return;m.set(label,(m.get(label)||0)+r[2])});
+    return m;
+  }
+  function pickLabel(mapA,mapB,daysA,daysB,wantUp){
+    let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});
+    return best;
+  }
+  function driverDetail(keyA,startA,endA,keyB,startB,endB,wantUp){
+    if(state.metric==="duration")return"";
+    const driverA=window.GA4_DRIVER_COMPLETE?.[keyA],driverB=window.GA4_DRIVER_COMPLETE?.[keyB],sourceA=window.GA4_SOURCE_DATA?.[keyA],sourceB=window.GA4_SOURCE_DATA?.[keyB];
+    if(!driverA||!driverB||!sourceA||!sourceB)return"";
+    const bad=new Set([...sourceProfile(keyA,startA,endA).bad,...sourceProfile(keyB,startB,endB).bad]),daysA=Math.max(1,dayCount(startA,endA)),daysB=Math.max(1,dayCount(startB,endB));
+    const names=["Source / medium","Campaign","Country","Device"],sets=[[sourceA.records,sourceA.sources,sourceB.records,sourceB.sources,true],[driverA.campaign.records,driverA.campaign.labels,driverB.campaign.records,driverB.campaign.labels,false],[driverA.country.records,driverA.country.labels,driverB.country.records,driverB.country.labels,false],[driverA.device.records,driverA.device.labels,driverB.device.records,driverB.device.labels,false]];
+    const picks=sets.map(([recA,labA,recB,labB,filterBad])=>pickLabel(sumByLabel(recA,labA,startA,endA,filterBad?bad:null),sumByLabel(recB,labB,startB,endB,filterBad?bad:null),daysA,daysB,wantUp));
+    if(!picks.every(Boolean))return"";
+    return" <strong>"+(wantUp?"Increased most":"Decreased most")+":</strong> "+picks.map((p,i)=>names[i]+" — "+esc(p.label)).join(" · ")+".";
+  }
   function setKpi(id,noteId,value,formatter,compareValue,compareDomain,defaultNote){$(id).textContent=formatter(value);const note=$(noteId);if(!compareDomain){note.textContent=defaultNote;return}const delta=Number.isFinite(compareValue)&&compareValue!==0?(value-compareValue)/compareValue*100:NaN;const pct=Number.isFinite(delta)?(delta>=0?"+":"")+delta.toFixed(1)+"%":"",tone=Number.isFinite(delta)?(delta>0?"up":delta<0?"down":""):"";note.innerHTML="vs "+esc(compareDomain.label)+": "+formatter(compareValue)+(pct?" · <span class=\"delta"+(tone?" "+tone:"")+"\">"+pct+"</span>":"")}
   function render(){
     const domain=D.domains.find(d=>keyOf(d)===state.host);
@@ -203,18 +222,17 @@
     if(period){
       const hasData=comparison&&comparison.data&&comparison.data.length;
       if(!hasData){$("#insight").innerHTML="<strong>Period comparison:</strong> No data is available for the "+esc(period.label)+" ("+longDate(period.start)+" – "+longDate(period.end)+").";return}
-      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN;
-      $("#insight").innerHTML="<strong>Period comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+").";
+      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,detail=Number.isFinite(pct)?driverDetail(state.host,period.start,period.end,state.host,state.start,state.end,pct>=0):"";
+      $("#insight").innerHTML="<strong>Period comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+")."+detail;
       return;
     }
-    if(compareDomain){const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN;$("#insight").innerHTML="<strong>Comparison:</strong> "+domain.label+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+compareDomain.label+" for this period.";return}
-    const data=primary.data;if(data.length<4){$("#insight").textContent="Not enough data is available for a trend observation.";return}
-    const half=Math.floor(data.length/2),a=data.slice(0,half).reduce((n,x)=>n+x[state.metric],0)/half,b=data.slice(half).reduce((n,x)=>n+x[state.metric],0)/(data.length-half),pct=a?((b-a)/a*100):0,word=pct>=0?"up":"down";
-    let detail="";
-    if(state.metric!=="duration"){
-      const driver=window.GA4_DRIVER_COMPLETE?.[state.host],source=window.GA4_SOURCE_DATA?.[state.host],profile=sourceProfile(state.host),cutoff=data[half].date,daysA=half,daysB=data.length-half,names=["Source / medium","Campaign","Country","Device"],pick=(records,driverLabels,badSources=false)=>{const m=new Map();records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=driverLabels[r[1]];if(date<state.start||date>state.end||(badSources&&profile.bad.has(label)))return;const v=m.get(r[1])||[0,0];v[date<cutoff?0:1]+=r[2];m.set(r[1],v)});let best=null;for(const [idx,v] of m){const delta=v[1]/daysB-v[0]/daysA;if(!best||(pct>=0?delta>best.delta:delta<best.delta))best={label:driverLabels[idx],delta}}return best};
-      if(driver&&source){const picks=[pick(source.records,source.sources,true),pick(driver.campaign.records,driver.campaign.labels),pick(driver.country.records,driver.country.labels),pick(driver.device.records,driver.device.labels)];if(picks.every(Boolean))detail=" <strong>"+(pct>=0?"Increased most":"Decreased most")+":</strong> "+picks.map((p,i)=>names[i]+" — "+esc(p.label)).join(" · ")+"."}
+    if(compareDomain){
+      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,detail=Number.isFinite(pct)?driverDetail(keyOf(compareDomain),state.start,state.end,state.host,state.start,state.end,pct>=0):"";
+      $("#insight").innerHTML="<strong>Comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period."+detail;
+      return;
     }
+    const data=primary.data;if(data.length<4){$("#insight").textContent="Not enough data is available for a trend observation.";return}
+    const half=Math.floor(data.length/2),a=data.slice(0,half).reduce((n,x)=>n+x[state.metric],0)/half,b=data.slice(half).reduce((n,x)=>n+x[state.metric],0)/(data.length-half),pct=a?((b-a)/a*100):0,word=pct>=0?"up":"down",cutoff=iso(shift(new Date(data[half].date+"T12:00:00"),-1)),detail=driverDetail(state.host,state.start,cutoff,state.host,data[half].date,state.end,pct>=0);
     $("#insight").innerHTML="<strong>"+esc(domain.label)+" signal:</strong> Average daily "+labels[state.metric].toLowerCase()+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+detail;
   }
   function contentRanks(key,type){
