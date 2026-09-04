@@ -94,12 +94,12 @@
     <div class="remarks">
       <h2>Remarks</h2>
       <ol>
-        <li>Select a domain to load any traffic, ranking, or content figures.</li>
-        <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). Year-on-year comparison may reach earlier dates, which show as no data if they sit outside this window.</li>
-        <li>Source/medium groups with an average duration of 0:00 in the selected period are excluded from sessions, users, page views, and time on site (KPIs, chart, ranking, and the source/medium donut).</li>
-        <li>Low-engagement China traffic averaging 0–3 seconds is excluded from those same figures on the KPIs, chart, ranking, country and device donuts, and insights. Product and recipe lists are not split by country, so they are not adjusted.</li>
-        <li>Average time on site is averaged only across days that still have duration after the filters above.</li>
-        <li>Rankings and “What visitors are viewing” list the five domains with the most remaining sessions.</li>
+        <li>Source/medium groups with 0:00 average duration in the selected period are excluded from sessions, users, page views, and time on site (KPI cards, trend chart, domain ranking, and the Source / medium donut).</li>
+        <li>Low-engagement China traffic with an average session duration of 0–3 seconds is excluded from those same figures, plus the country and device donuts and Actionable Insights. On days when remaining time on site is still 0–3 seconds, China sessions for that day are also dropped. Product and recipe lists, and Page / session, are not split by country and are not reduced by this filter.</li>
+        <li>A domain must be selected before any data is shown.</li>
+        <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
+        <li>Average time on site is averaged only across days that still have a duration after the exclusions above.</li>
+        <li>Domain ranking and What visitors are viewing show the five domains with the most remaining sessions.</li>
       </ol>
     </div>
   </footer>
