@@ -12,7 +12,7 @@
     .brand{display:flex;align-items:center;gap:14px}.brand-mark{width:46px;height:46px;border-radius:14px;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;letter-spacing:-1px;box-shadow:0 8px 24px rgba(178,14,24,.22)}
     h1{font-family:Georgia,serif;font-size:28px;line-height:1;margin:0 0 5px;font-weight:600}.eyebrow,.stamp{font-size:13px;color:var(--muted)}.live{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 13px;font-size:13px;white-space:nowrap}.dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 0 4px rgba(20,122,85,.12)}
     .toolbar{background:var(--ink);color:#fff;padding:12px;border-radius:18px;display:grid;grid-template-columns:repeat(2,minmax(210px,1.35fr)) minmax(145px,.9fr) repeat(2,minmax(135px,.8fr)) minmax(145px,.9fr) minmax(165px,1fr);gap:10px;box-shadow:var(--shadow);position:sticky;top:10px;z-index:10}
-    .control{background:#2a292b;border:1px solid #3b393b;border-radius:12px;padding:9px 12px}.control label{display:block;color:#aaa7a7;font-size:12px;margin-bottom:4px}.control select,.control input{width:100%;background:transparent;color:#fff;border:0;outline:0;font-weight:650;min-height:24px}.control option{color:#111;background:#fff}.control option.group-option{color:var(--red);background:#f1efeb;font-size:12px;font-weight:800}.control input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.75;cursor:pointer}.control input:disabled{color:#777;cursor:not-allowed}.control:has(input:disabled){opacity:.56}
+    .control{background:#2a292b;border:1px solid #3b393b;border-radius:12px;padding:9px 12px}.control label{display:block;color:#aaa7a7;font-size:12px;margin-bottom:4px}.control select,.control input{width:100%;background:transparent;color:#fff;border:0;outline:0;font-weight:650;min-height:24px}.control option{color:#111;background:#fff}.control option.group-option{color:var(--red);background:#f1efeb;font-size:12px;font-weight:800}.control input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.75;cursor:pointer}.control input:disabled,.control select:disabled{color:#777;cursor:not-allowed}.control:has(input:disabled),.control:has(select:disabled){opacity:.56}.control.needs-domain{box-shadow:inset 0 0 0 1px #e32d39}
     .type-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.type-buttons button{border:0;border-radius:7px;padding:7px 4px;background:transparent;color:#aaa7a7;cursor:pointer}.type-buttons button.active{background:#fff;color:#151515}.type-buttons button:focus-visible,.rank-head:focus-visible{outline:3px solid #f19ba1;outline-offset:2px}
     .grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(310px,.9fr);gap:18px;margin-top:18px}.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
     .main{padding:22px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.panel h2{font-family:Georgia,serif;font-size:22px;margin:0 0 5px;font-weight:600}.sub{color:var(--muted);font-size:13px}
@@ -22,7 +22,7 @@
     .ranking{padding:20px}.ranking ol{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:15px}.domain-rank{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center}.num{font-family:Georgia,serif;color:#a09b96}.domain-name{font-weight:680;font-size:14px}.domain-host{font-size:12px;color:var(--muted);margin-top:2px}.rank-value{font-weight:700;font-size:13px}.track{height:5px;background:#eeeae4;border-radius:5px;overflow:hidden;grid-column:2/4}.track span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:5px}
     .section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:30px 0 14px}.section-head h2{font-family:Georgia,serif;margin:0;font-size:25px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.badge{font-size:12px;background:#ece8e1;border-radius:999px;padding:7px 11px;color:#625e5b;white-space:nowrap}
     .content-grid{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:7px}.market{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden;min-width:230px}.rank-head{width:100%;border:0;background:#fff;padding:15px 16px;text-align:left;border-bottom:1px solid #eeeae4}.rank-head strong{font-size:14px}.market-body{padding:13px 15px 16px}.list-title{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:2px 0 9px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}.list-total{text-align:right;white-space:nowrap;letter-spacing:0;color:var(--muted);font-weight:700}.item{display:grid;grid-template-columns:18px 1fr auto;gap:7px;padding:7px 0;border-bottom:1px solid #f0ede8;align-items:start}.item:last-child{border-bottom:0}.item-rank{font-size:11px;color:#a19d98;padding-top:2px}.item-name{font-size:12px;line-height:1.35}.item-value{font-size:11px;color:var(--muted)}.divider{height:1px;background:#e9e5df;margin:12px 0}
-    .empty{padding:40px;text-align:center;color:var(--muted)}footer{display:flex;justify-content:space-between;gap:15px;margin-top:28px;color:#817d79;font-size:12px}.desktop-note{display:inline}
+    .empty{padding:40px;text-align:center;color:var(--muted)}.insight:empty{display:none}.ranking .empty{list-style:none;padding:28px 8px}.content-grid>.empty{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);padding:40px 20px}footer{display:flex;justify-content:space-between;gap:15px;margin-top:28px;color:#817d79;font-size:12px}.desktop-note{display:inline}
     @media(max-width:1100px){.toolbar{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}.content-grid{grid-template-columns:repeat(5,280px)}}
     @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:flex-start}.live{padding:8px 10px}.desktop-note{display:none}.toolbar{position:static;grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.main,.ranking{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-wrap{min-height:250px}.content-grid{grid-template-columns:repeat(5,260px)}footer{flex-direction:column}}
   </style>
@@ -35,7 +35,7 @@
   </header>
 
   <section class="toolbar" aria-label="Dashboard controls">
-    <div class="control"><label for="domain">Domain</label><select id="domain"></select></div>
+    <div class="control needs-domain"><label for="domain">Domain</label><select id="domain" required></select></div>
     <div class="control"><label for="compare">Compare with</label><select id="compare"></select></div>
     <div class="control"><label for="period">Data period</label><select id="period"><option value="7">Last 7 days</option><option value="14">Last 14 days</option><option value="30" selected>Last 30 days</option><option value="mtd">Month-to-date</option><option value="ytd">Year-to-date</option><option value="custom">Custom range</option></select></div>
     <div class="control"><label for="start-date">Start date</label><input id="start-date" type="date" disabled></div>
@@ -80,10 +80,10 @@
   const durationFmt=n=>{if(!Number.isFinite(n))return"—";const s=Math.max(0,Math.round(n)),m=Math.floor(s/60),r=String(s%60).padStart(2,"0");return m+"m "+r+"s"};
   const labels={sessions:"Sessions",users:"Active users",views:"Page views",duration:"Average time on site"}, latest=new Date(D.dataEnd+"T12:00:00"), base=Date.parse(D.dataStart+"T00:00:00Z");
   const iso=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return y+"-"+m+"-"+day}, shift=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
-  const state={host:keyOf(D.domains[0]),compare:"",start:iso(shift(latest,-29)),end:D.dataEnd,metric:"sessions",type:"line"};
+  const state={host:"",compare:"",start:iso(shift(latest,-29)),end:D.dataEnd,metric:"sessions",type:"line"};
   const regionOrder=["APAC","Americas","Europe","Corporate","Others"],regionKeys={APAC:["hk.lkk.com","malaysia.lkk.com","tw.lkk.com","au.lkk.com","sg.lkk.com","kr.lkk.com","id.lkk.com","nz.lkk.com","jp.lkk.com","ph.lkk.com","in.lkk.com","vn.lkk.com"],Americas:["usa.lkk.com","ca.lkk.com","csa.lkk.com"],Europe:["eu.lkk.com","gawa:259299200","gawa:270258410","gawa:274757322","gawa:359131146","gawa:359138868","gawa:359140744","gawa:359143062","gawa:359148543","gawa:359149333","gawa:359151329","gawa:359159762","gawa:359359758","gawa:435274171","gawa:482136493","gawa:507647134"],Corporate:["corporate.lkk.com"],Others:["gawa:359143969"]},regionMap=new Map(Object.entries(regionKeys).flatMap(([region,keys])=>keys.map(key=>[key,region])));
-  function options(includeNone=false){const none=includeNone?'<option value="">No comparison</option>':"";return none+regionOrder.map(region=>{const items=D.domains.filter(d=>(regionMap.get(keyOf(d))||"Others")===region).sort((a,b)=>a.label.localeCompare(b.label));return'<option class="group-option" disabled>— '+region+' —</option>'+items.map(d=>'<option value="'+keyOf(d)+'">'+d.label+' · '+d.host+'</option>').join("")}).join("")}
-  $("#domain").innerHTML=options();$("#compare").innerHTML=options(true);
+  function options(includeNone=false){const none=includeNone?'<option value="">No comparison</option>':'<option value="">Select a domain</option>';return none+regionOrder.map(region=>{const items=D.domains.filter(d=>(regionMap.get(keyOf(d))||"Others")===region).sort((a,b)=>a.label.localeCompare(b.label));return'<option class="group-option" disabled>— '+region+' —</option>'+items.map(d=>'<option value="'+keyOf(d)+'">'+d.label+' · '+d.host+'</option>').join("")}).join("")}
+  $("#domain").innerHTML=options();$("#compare").innerHTML=options(true);$("#domain").value="";$("#compare").value="";$("#compare").disabled=true;
   $("#start-date").min=$("#end-date").min=D.dataStart;$("#start-date").max=$("#end-date").max=D.dataEnd;
   const dateFmt=s=>new Date(s+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric"});
   const longDate=s=>new Date(s+"T12:00:00").toLocaleDateString("en",{day:"numeric",month:"short",year:"numeric"});
@@ -110,17 +110,37 @@
   function metricValue(s){return s[state.metric]}
   function setKpi(id,noteId,value,formatter,compareValue,compareDomain,defaultNote){$(id).textContent=formatter(value);const note=$(noteId);if(!compareDomain){note.textContent=defaultNote;return}const delta=Number.isFinite(compareValue)&&compareValue!==0?(value-compareValue)/compareValue*100:NaN;note.textContent="vs "+compareDomain.label+": "+formatter(compareValue)+(Number.isFinite(delta)?" · "+(delta>=0?"+":"")+delta.toFixed(1)+"%":"")}
   function render(){
-    const domain=D.domains.find(d=>keyOf(d)===state.host),primary=stats(state.host),compareDomain=state.compare?D.domains.find(d=>keyOf(d)===state.compare):null,comparison=compareDomain?stats(state.compare):null;
+    const domain=D.domains.find(d=>keyOf(d)===state.host);
+    $("#stamp").textContent=longDate(state.start)+" – "+longDate(state.end);
+    $("#content-range").textContent=dateFmt(state.start)+" – "+dateFmt(state.end);
+    $("#compare").disabled=!domain;
+    $("#domain").closest(".control").classList.toggle("needs-domain",!domain);
+    if(!domain){
+      state.compare="";$("#compare").value="";
+      $("#chart-title").textContent="Traffic trend";
+      $("#chart-sub").textContent="Select a domain to view performance for the selected period";
+      $("#legend").innerHTML="";
+      $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-duration").textContent="—";
+      $("#note-sessions").textContent="Total in selected period";
+      $("#note-users").textContent="Avoids double-counting users";
+      $("#note-views").textContent="Total in selected period";
+      $("#note-rate").textContent="Content depth indicator";
+      $("#note-duration").textContent="Average session duration";
+      $("#chart").innerHTML='<text x="500" y="160" text-anchor="middle" class="axistext">Select a domain to view traffic</text>';
+      $("#insight").textContent="";
+      $("#ranking").innerHTML='<li class="empty">Select a domain to view rankings</li>';
+      $("#content-grid").innerHTML='<div class="empty">Select a domain to view top products and recipes</div>';
+      return;
+    }
+    const primary=stats(state.host),compareDomain=state.compare?D.domains.find(d=>keyOf(d)===state.compare):null,comparison=compareDomain?stats(state.compare):null;
     $("#chart-title").textContent=compareDomain?domain.label+" vs "+compareDomain.label:domain.label+" traffic";
     $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" by day"+(compareDomain?" · comparison enabled":"");
-    $("#stamp").textContent=longDate(state.start)+" – "+longDate(state.end);
     $("#legend").innerHTML=compareDomain?'<span><i></i>'+domain.label+'</span><span><i class="compare"></i>'+compareDomain.label+'</span>':"";
     setKpi("#kpi-sessions","#note-sessions",primary.sessions,fmt,comparison?.sessions,compareDomain,"Total in selected period");
     setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,compareDomain,"Avoids double-counting users");
     setKpi("#kpi-views","#note-views",primary.views,fmt,comparison?.views,compareDomain,"Total in selected period");
     setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,compareDomain,"Content depth indicator");
     setKpi("#kpi-duration","#note-duration",primary.duration,durationFmt,comparison?.duration,compareDomain,"Average session duration");
-    $("#content-range").textContent=dateFmt(state.start)+" – "+dateFmt(state.end);
     draw(primary.data,comparison?.data||[],domain,compareDomain);renderRanking();renderInsight(primary,domain,comparison,compareDomain);renderContent();
   }
   function draw(data,compareData,domain,compareDomain){
