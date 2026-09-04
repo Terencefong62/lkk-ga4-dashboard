@@ -18,7 +18,7 @@
     .main{padding:22px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.panel h2{font-family:Georgia,serif;font-size:22px;margin:0 0 5px;font-weight:600}.sub{color:var(--muted);font-size:13px}
     .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:12px 10px}.kpi-label{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:22px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta{font-weight:700}.kpi-note .delta.up{color:var(--green)}.kpi-note .delta.down{color:var(--red)}
     .chart-wrap{position:relative;min-height:315px}.chart{width:100%;height:auto;display:block;overflow:visible}.gridline{stroke:#ebe8e2;stroke-width:1}.axistext{fill:#8c8884;font-size:11px}.axistext.compare{fill:#315b8a}.chartline,.compareline{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.compareline{stroke:#315b8a;stroke-width:2.5;stroke-dasharray:8 6}.areafill{fill:url(#area)}.bar{fill:var(--red);opacity:.9}.comparebar{fill:#315b8a;opacity:.85}.point{fill:#fff;stroke:var(--red);stroke-width:2}.comparepoint{fill:#fff;stroke:#315b8a;stroke-width:2}.tooltip{position:absolute;pointer-events:none;background:#151515;color:#fff;padding:9px 11px;border-radius:9px;font-size:12px;box-shadow:0 8px 30px #0003;opacity:0;transform:translate(-50%,-115%);white-space:nowrap;transition:opacity .1s}.legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:3px;border-radius:3px;background:var(--red)}.legend i.compare{background:#315b8a}
-    .insights{margin:0 0 18px}.insights:has(#insight:empty){display:none}.insights-label{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 8px}.insight{border-left:3px solid var(--red);background:var(--soft);padding:11px 13px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}
+    .insights{margin:0 0 18px}.insights:has(#insight:empty){display:none}.insights-label{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 8px}.insight{border-left:3px solid var(--red);background:var(--soft);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}.insight-part+.insight-part{margin-top:10px;padding-top:10px;border-top:1px solid #ecd4d4}.insight-part-label{font-family:Georgia,serif;font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 5px}.insight-part-body{margin:0}.insight-actions{margin:0;padding-left:1.2em}.insight-actions li+li{margin-top:5px}
     .ranking{padding:20px}.ranking ol{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:15px}.domain-rank{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center}.num{font-family:Georgia,serif;color:#a09b96}.domain-name{font-weight:680;font-size:14px}.domain-host{font-size:12px;color:var(--muted);margin-top:2px}.rank-value{font-weight:700;font-size:13px}.track{height:5px;background:#eeeae4;border-radius:5px;overflow:hidden;grid-column:2/4}.track span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:5px}
     .section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:30px 0 14px}.section-head h2{font-family:Georgia,serif;margin:0;font-size:25px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.badge{font-size:12px;background:#ece8e1;border-radius:999px;padding:7px 11px;color:#625e5b;white-space:nowrap}
     .content-grid{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:7px}.market{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden;min-width:230px}.rank-head{width:100%;border:0;background:#fff;padding:15px 16px;text-align:left;border-bottom:1px solid #eeeae4}.rank-head strong{font-size:14px}.rank-head .host{font-size:12px;font-weight:500;color:var(--muted)}.market-body{padding:13px 15px 16px}.list-title{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:2px 0 9px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}.list-total{text-align:right;white-space:nowrap;letter-spacing:0;color:var(--muted);font-weight:700}.item{display:grid;grid-template-columns:18px 1fr auto;gap:7px;padding:7px 0;border-bottom:1px solid #f0ede8;align-items:start}.item:last-child{border-bottom:0}.item-rank{font-size:11px;color:#a19d98;padding-top:2px}.item-name{font-size:12px;line-height:1.35}.item-value{font-size:11px;color:var(--muted);white-space:nowrap}.divider{height:1px;background:#e9e5df;margin:12px 0}
@@ -206,20 +206,65 @@
     records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=labels[r[1]];if(date<from||date>to||(bad&&bad.has(label)))return;const n=Math.max(0,r[2]-(adjust?adjust(r[0],label):0));if(n)m.set(label,(m.get(label)||0)+n)});
     return m;
   }
+  function genericDriver(s){
+    const t=String(s??"").trim().toLowerCase().replace(/\s+/g," ");
+    return !t||t==="(not set)"||t==="not set"||t==="(direct)"||t==="direct"||t==="(none)"||t==="none"||t==="(direct) / (none)"||t==="(direct)/(none)"||t==="(not set) / (not set)";
+  }
   function pickLabel(mapA,mapB,daysA,daysB,wantUp){
-    const vague=s=>{const t=String(s??"").trim().toLowerCase();return!t||t==="(not set)"||t==="not set"},choose=(allowVague)=>{let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{if(!allowVague&&vague(label))return;const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});return best};
+    const choose=(allowVague)=>{let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{if(!allowVague&&genericDriver(label))return;const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});return best};
     return choose(false)||choose(true);
   }
-  function driverDetail(keyA,startA,endA,keyB,startB,endB,wantUp){
-    if(state.metric==="duration")return"";
+  function driverPicks(keyA,startA,endA,keyB,startB,endB,wantUp){
+    if(state.metric==="duration")return null;
     const driverA=window.GA4_DRIVER_COMPLETE?.[keyA],driverB=window.GA4_DRIVER_COMPLETE?.[keyB],sourceA=window.GA4_SOURCE_DATA?.[keyA],sourceB=window.GA4_SOURCE_DATA?.[keyB];
-    if(!driverA||!driverB||!sourceA||!sourceB)return"";
+    if(!driverA||!driverB||!sourceA||!sourceB)return null;
     const bad=new Set([...sourceProfile(keyA,startA,endA).bad,...sourceProfile(keyB,startB,endB).bad]),daysA=Math.max(1,dayCount(startA,endA)),daysB=Math.max(1,dayCount(startB,endB));
     const adjA=chinaAdjust(keyA,startA,endA),adjB=chinaAdjust(keyB,startB,endB);
     const names=["Source / medium","Campaign","Country","Device"],sets=[[sourceA.records,sourceA.sources,sourceB.records,sourceB.sources,true,null],[driverA.campaign.records,driverA.campaign.labels,driverB.campaign.records,driverB.campaign.labels,false,null],[driverA.country.records,driverA.country.labels,driverB.country.records,driverB.country.labels,false,true],[driverA.device.records,driverA.device.labels,driverB.device.records,driverB.device.labels,false,true]];
     const picks=sets.map(([recA,labA,recB,labB,filterBad,useChina])=>pickLabel(sumByLabel(recA,labA,startA,endA,filterBad?bad:null,useChina?adjA:null),sumByLabel(recB,labB,startB,endB,filterBad?bad:null,useChina?adjB:null),daysA,daysB,wantUp));
-    if(!picks.every(Boolean))return"";
-    return" <strong>"+(wantUp?"Increased most":"Decreased most")+":</strong> "+picks.map((p,i)=>names[i]+" — "+esc(p.label)).join(" · ")+".";
+    if(!picks.every(Boolean))return null;
+    return picks.map((p,i)=>({name:names[i],label:p.label}));
+  }
+  function driverObservation(picks,wantUp){
+    if(!picks)return"";
+    return" <strong>"+(wantUp?"Increased most":"Decreased most")+":</strong> "+picks.map(p=>p.name+" — "+esc(p.label)).join(" · ")+".";
+  }
+  function namedDriver(picks,name){
+    const p=picks?.find(x=>x.name===name);
+    return p&&!genericDriver(p.label)?p.label:"";
+  }
+  function driverActions(picks,wantUp){
+    if(!picks&&state.metric==="duration"){
+      return wantUp
+        ?["Review pages that held attention longer and replicate that content on weaker URLs.","Compare Session mix donuts to see whether the time-on-site lift is concentrated in a channel worth scaling."]
+        :["Check landing-page quality and load time where visits continue but time on site fell.","Protect channels that still hold engagement so the decline does not spread."];
+    }
+    const items=[],source=namedDriver(picks,"Source / medium"),campaign=namedDriver(picks,"Campaign");
+    const country=picks?.find(x=>x.name==="Country")?.label||"",device=picks?.find(x=>x.name==="Device")?.label||"";
+    const china=/\bchina\b/i.test(country),desktop=/^desktop$/i.test(device);
+    if(wantUp){
+      if(source)items.push("Investigate the lift from <strong>"+esc(source)+"</strong> — confirm landing pages, tracking, and media delivery can sustain it.");
+      else items.push("Use the Session mix donuts to find a named source / medium behind the lift, rather than unassigned or direct traffic.");
+      if(campaign)items.push("Double down on the <strong>"+esc(campaign)+"</strong> campaign if results look sustainable.");
+      if(china||desktop)items.push("Review whether "+(china?"China":esc(country))+(desktop?" on desktop":"")+" needs more local content or a bot-like traffic check (see Remarks).");
+    }else{
+      const named=[source&&("<strong>"+esc(source)+"</strong>"),campaign&&("<strong>"+esc(campaign)+"</strong>")].filter(Boolean);
+      if(named.length)items.push("Diagnose the drop on "+named.join(" and ")+" — check tracking, landing-page health, and media delivery.");
+      else items.push("Use the Session mix donuts to isolate which named channel lost volume.");
+      items.push("Protect remaining channels that held volume so the decline does not spread.");
+      if(china)items.push("Check China traffic quality against the bot-like rules in Remarks before treating the drop as a demand loss.");
+    }
+    return items;
+  }
+  function twoDomainActions(domain,compareDomain,ahead){
+    const lead=ahead?domain.label:compareDomain.label,trail=ahead?compareDomain.label:domain.label;
+    return[
+      "Study <strong>"+esc(lead)+"</strong>'s Session mix donuts and Top 5 products and recipes to see which channels and content explain the lead.",
+      "Use those patterns to plan acquisition and content for <strong>"+esc(trail)+"</strong> and close the gap."
+    ];
+  }
+  function insightHtml(observation,actions){
+    return'<div class="insight-part"><h4 class="insight-part-label">Observation(s)</h4><p class="insight-part-body">'+observation+'</p></div><div class="insight-part"><h4 class="insight-part-label">Action Item(s)</h4><ul class="insight-actions">'+actions.map(a=>"<li>"+a+"</li>").join("")+"</ul></div>";
   }
   function setKpi(id,noteId,value,formatter,compareValue,compareDomain,defaultNote){$(id).textContent=formatter(value);const note=$(noteId);if(!compareDomain){note.textContent=defaultNote;return}const delta=Number.isFinite(compareValue)&&compareValue!==0?(value-compareValue)/compareValue*100:NaN;const pct=Number.isFinite(delta)?(delta>=0?"+":"")+delta.toFixed(1)+"%":"",tone=Number.isFinite(delta)?(delta>0?"up":delta<0?"down":""):"";note.innerHTML="vs "+esc(compareDomain.label)+": "+formatter(compareValue)+(pct?" · <span class=\"delta"+(tone?" "+tone:"")+"\">"+pct+"</span>":"")}
   function render(){
@@ -298,19 +343,34 @@
   function renderInsight(primary,domain,comparison,compareDomain,period){
     if(period){
       const hasData=comparison&&comparison.data&&comparison.data.length;
-      if(!hasData){$("#insight").innerHTML="<strong>Period comparison:</strong> No data is available for the "+esc(period.label)+" ("+longDate(period.start)+" – "+longDate(period.end)+").";return}
-      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,detail=Number.isFinite(pct)?driverDetail(state.host,period.start,period.end,state.host,state.start,state.end,pct>=0):"";
-      $("#insight").innerHTML="<strong>Period comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+")."+detail;
+      if(!hasData){
+        $("#insight").innerHTML=insightHtml("No data is available for the "+esc(period.label)+" ("+longDate(period.start)+" – "+longDate(period.end)+").",["Choose a comparison period inside the snapshot window, or confirm the GA4 export covers those dates (see Remarks)."]);
+        return;
+      }
+      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,wantUp=Number.isFinite(pct)?pct>=0:true;
+      const picks=Number.isFinite(pct)?driverPicks(state.host,period.start,period.end,state.host,state.start,state.end,wantUp):null;
+      const metric=labels[state.metric].toLowerCase();
+      const observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+metric+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+")."+driverObservation(picks,wantUp);
+      const actions=Number.isFinite(pct)?driverActions(picks,wantUp):["Confirm both periods have complete tracking, then compare Session mix and Top 5 content once a percentage is available."];
+      $("#insight").innerHTML=insightHtml(observation,actions);
       return;
     }
     if(compareDomain){
       const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN;
-      $("#insight").innerHTML="<strong>Comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period.";
+      const observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period.";
+      const actions=Number.isFinite(pct)?twoDomainActions(domain,compareDomain,pct>=0):["Confirm tracking is complete for both markets, then compare Session mix donuts and Top 5 products and recipes once both sides have data."];
+      $("#insight").innerHTML=insightHtml(observation,actions);
       return;
     }
-    const data=primary.data;if(data.length<4){$("#insight").textContent="Not enough data is available for a trend observation.";return}
-    const half=Math.floor(data.length/2),a=data.slice(0,half).reduce((n,x)=>n+x[state.metric],0)/half,b=data.slice(half).reduce((n,x)=>n+x[state.metric],0)/(data.length-half),pct=a?((b-a)/a*100):0,word=pct>=0?"up":"down",cutoff=iso(shift(new Date(data[half].date+"T12:00:00"),-1)),detail=driverDetail(state.host,state.start,cutoff,state.host,data[half].date,state.end,pct>=0);
-    $("#insight").innerHTML="<strong>"+esc(domain.label)+" signal:</strong> Average daily "+labels[state.metric].toLowerCase()+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+detail;
+    const data=primary.data;
+    if(data.length<4){
+      $("#insight").innerHTML=insightHtml("Not enough data is available for a trend observation.",["Widen the date range so at least four days are available before reading a trend."]);
+      return;
+    }
+    const half=Math.floor(data.length/2),a=data.slice(0,half).reduce((n,x)=>n+x[state.metric],0)/half,b=data.slice(half).reduce((n,x)=>n+x[state.metric],0)/(data.length-half),pct=a?((b-a)/a*100):0,word=pct>=0?"up":"down",cutoff=iso(shift(new Date(data[half].date+"T12:00:00"),-1));
+    const picks=driverPicks(state.host,state.start,cutoff,state.host,data[half].date,state.end,pct>=0);
+    const observation="Average daily "+labels[state.metric].toLowerCase()+" for "+esc(domain.label)+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+driverObservation(picks,pct>=0);
+    $("#insight").innerHTML=insightHtml(observation,driverActions(picks,pct>=0));
   }
   function contentRanks(key,type){
     const c=D.content[key]?.[type];if(!c)return null;
