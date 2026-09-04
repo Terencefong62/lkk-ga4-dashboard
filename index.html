@@ -22,9 +22,19 @@
     .ranking{padding:20px}.ranking ol{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:15px}.domain-rank{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center}.num{font-family:Georgia,serif;color:#a09b96}.domain-name{font-weight:680;font-size:14px}.domain-host{font-size:12px;color:var(--muted);margin-top:2px}.rank-value{font-weight:700;font-size:13px}.track{height:5px;background:#eeeae4;border-radius:5px;overflow:hidden;grid-column:2/4}.track span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:5px}
     .section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:30px 0 14px}.section-head h2{font-family:Georgia,serif;margin:0;font-size:25px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.badge{font-size:12px;background:#ece8e1;border-radius:999px;padding:7px 11px;color:#625e5b;white-space:nowrap}
     .content-grid{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:7px}.market{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden;min-width:230px}.rank-head{width:100%;border:0;background:#fff;padding:15px 16px;text-align:left;border-bottom:1px solid #eeeae4}.rank-head strong{font-size:14px}.rank-head .host{font-size:12px;font-weight:500;color:var(--muted)}.market-body{padding:13px 15px 16px}.list-title{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:2px 0 9px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}.list-total{text-align:right;white-space:nowrap;letter-spacing:0;color:var(--muted);font-weight:700}.item{display:grid;grid-template-columns:18px 1fr auto;gap:7px;padding:7px 0;border-bottom:1px solid #f0ede8;align-items:start}.item:last-child{border-bottom:0}.item-rank{font-size:11px;color:#a19d98;padding-top:2px}.item-name{font-size:12px;line-height:1.35}.item-value{font-size:11px;color:var(--muted)}.divider{height:1px;background:#e9e5df;margin:12px 0}
-    .empty{padding:40px;text-align:center;color:var(--muted)}.insight:empty{display:none}.ranking .empty{list-style:none;padding:28px 8px}.content-grid>.empty{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);padding:40px 20px}.focus-content{margin-top:22px;padding-top:18px;border-top:1px solid #eeeae4}.focus-content[hidden]{display:none}.focus-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}.focus-head h3{font-family:Georgia,serif;font-size:18px;margin:0;font-weight:600}.focus-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.focus-col{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:13px 14px}.focus-col .item-bar{height:4px;background:#eeeae4;border-radius:4px;overflow:hidden;grid-column:1/4;margin:2px 0 4px}.focus-col .item-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2))}@media(max-width:680px){.focus-grid{grid-template-columns:1fr}}footer{display:flex;justify-content:space-between;gap:15px;margin-top:28px;color:#817d79;font-size:12px}.desktop-note{display:inline}
+    .empty{padding:40px;text-align:center;color:var(--muted)}.insight:empty{display:none}.ranking .empty{list-style:none;padding:28px 8px}.content-grid>.empty{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);padding:40px 20px}.focus-content{margin-top:22px;padding-top:18px;border-top:1px solid #eeeae4}.focus-content[hidden]{display:none}.focus-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}.focus-head h3{font-family:Georgia,serif;font-size:18px;margin:0;font-weight:600}.focus-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.focus-col{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:13px 14px}.focus-col .item-bar{height:4px;background:#eeeae4;border-radius:4px;overflow:hidden;grid-column:1/4;margin:2px 0 4px}.focus-col .item-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2))}@media(max-width:680px){.focus-grid{grid-template-columns:1fr}}
+    .donuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid #eeeae4}.donuts[hidden]{display:none}
+    .donut-card{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px 15px}.donut-card h3{font-family:Georgia,serif;font-size:16px;margin:0 0 12px;font-weight:600}
+    .donut-body{display:flex;align-items:center;gap:12px}.donut-body svg{width:118px;height:118px;flex:0 0 118px}
+    .donut-legend{list-style:none;margin:0;padding:0;display:grid;gap:5px;min-width:0;flex:1}
+    .donut-legend li{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:7px;align-items:start;font-size:12px;line-height:1.35}
+    .donut-swatch{width:8px;height:8px;border-radius:50%;margin-top:4px;flex:0 0 8px}
+    .donut-label{color:var(--ink);min-width:0;overflow-wrap:anywhere}.donut-pct{color:var(--muted);white-space:nowrap;font-weight:650}
+    .donut-empty{color:var(--muted);font-size:12px;padding:22px 6px;text-align:center;width:100%}
+    .donut-center{fill:var(--ink);font-size:13px;font-weight:730;font-family:Inter,ui-sans-serif,sans-serif}.donut-center-sub{fill:#8c8884;font-size:6.5px;font-family:Inter,ui-sans-serif,sans-serif}
+    footer{display:flex;justify-content:space-between;gap:15px;margin-top:28px;color:#817d79;font-size:12px}.desktop-note{display:inline}
     @media(max-width:1100px){.toolbar{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}.content-grid{grid-template-columns:repeat(5,280px)}}
-    @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:flex-start}.live{padding:8px 10px}.desktop-note{display:none}.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.main,.ranking{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-wrap{min-height:250px}.content-grid{grid-template-columns:repeat(5,260px)}footer{flex-direction:column}}
+    @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:flex-start}.live{padding:8px 10px}.desktop-note{display:none}.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.main,.ranking{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-wrap{min-height:250px}.donuts{grid-template-columns:1fr}.content-grid{grid-template-columns:repeat(5,260px)}footer{flex-direction:column}}
   </style>
 </head>
 <body>
@@ -60,6 +70,11 @@
         <div class="insight" id="insight"></div>
       </div>
       <div class="chart-wrap" id="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 1000 315" role="img" aria-label="Traffic trend chart"></svg><div class="tooltip" id="tooltip"></div></div>
+      <div class="donuts" id="donuts" hidden>
+        <article class="donut-card"><h3>Source / medium</h3><div class="donut-body" id="donut-source"></div></article>
+        <article class="donut-card"><h3>Demographic</h3><div class="donut-body" id="donut-country"></div></article>
+        <article class="donut-card"><h3>Device</h3><div class="donut-body" id="donut-device"></div></article>
+      </div>
       <div class="focus-content" id="focus-content" hidden>
         <div class="focus-head"><h3 id="focus-title">Top 5 products and recipes</h3><div class="sub" id="focus-sub"></div></div>
         <div class="focus-grid">
@@ -178,6 +193,7 @@
       $("#ranking").innerHTML='<li class="empty">Select a domain to view rankings</li>';
       $("#content-grid").innerHTML='<div class="empty">Select a domain to view top products and recipes</div>';
       $("#focus-content").hidden=true;
+      $("#donuts").hidden=true;
       return;
     }
     const primary=stats(state.host),period=comparePeriod(),compareDomain=state.compare?D.domains.find(d=>keyOf(d)===state.compare):null,periodTarget=period?{label:period.label}:null,comparison=compareDomain?stats(state.compare):period?stats(state.host,period.start,period.end):null,kpiCompare=compareDomain||periodTarget;
@@ -207,7 +223,7 @@
       const comparePlot=primaryPlot.map((row,i)=>{const c=compareFilled[i]||{date:"",sessions:0,users:0,views:0,duration:0};return{...c,date:row.date,tooltipDate:c.date}});
       draw(primaryPlot,comparePlot,domain,periodTarget);
     }else draw(primary.data,comparison?.data||[],domain,compareDomain);
-    renderRanking();renderInsight(primary,domain,comparison,compareDomain,period);renderFocusContent(domain);renderContent();
+    renderRanking();renderInsight(primary,domain,comparison,compareDomain,period);renderDonuts(domain);renderFocusContent(domain);renderContent();
   }
   function axisLabel(s,withYear){if(!s)return"";const d=new Date(s+"T12:00:00");return withYear?d.toLocaleDateString("en",{month:"short",day:"numeric",year:"2-digit"}):dateFmt(s)}
   function draw(data,compareData,domain,compareDomain){
@@ -259,6 +275,43 @@
     return r.items.map((x,i)=>'<div class="item"><span class="item-rank">'+(i+1)+'</span><span class="item-name">'+esc(x.title)+'</span><span class="item-value">'+fmt(x.sessions)+(showPct?' · '+x.pct.toFixed(1)+'%':'')+'</span>'+(bars?'<div class="item-bar"><span style="width:'+Math.max(3,x.sessions/max*100)+'%"></span></div>':'')+'</div>').join("");
   }
   function contentSection(label,r,showPct,bars=false){return'<div class="list-title"><span>'+label+'</span>'+(r?'<span class="list-total">'+fmt(r.total)+' sessions</span>':'')+'</div>'+contentList(r,showPct,bars)}
+  const DONUT_COLORS=["#b20e18","#e32d39","#315b8a","#8a7d72","#147a55"],DONUT_OTHER="#c4b8aa";
+  function vagueLabel(s){const t=String(s??"").trim().toLowerCase();return!t||t==="(not set)"||t==="not set"}
+  function topSlices(map,limit=5){
+    const items=[...map.entries()].filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    if(!items.length)return[];
+    const named=items.filter(([l])=>!vagueLabel(l)),unnamed=items.filter(([l])=>vagueLabel(l));
+    const pool=named.length?named:items,rest=named.length?[...named.slice(limit),...unnamed]:items.slice(limit);
+    const top=pool.slice(0,limit),other=rest.reduce((n,[,v])=>n+v,0);
+    const slices=top.map(([label,value])=>({label,value,other:false}));
+    if(other>0)slices.push({label:"Other",value:other,other:true});
+    return slices;
+  }
+  function polar(cx,cy,r,deg){const a=(deg-90)*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]}
+  function donutSlice(cx,cy,rIn,rOut,a0,a1,color){
+    const sweep=a1-a0;
+    if(sweep>=359.99)return'<circle cx="'+cx+'" cy="'+cy+'" r="'+((rOut+rIn)/2)+'" fill="none" stroke="'+color+'" stroke-width="'+(rOut-rIn)+'"/>';
+    const large=sweep>180?1:0,[ox0,oy0]=polar(cx,cy,rOut,a0),[ox1,oy1]=polar(cx,cy,rOut,a1),[ix1,iy1]=polar(cx,cy,rIn,a1),[ix0,iy0]=polar(cx,cy,rIn,a0);
+    return'<path fill="'+color+'" d="M'+ox0.toFixed(2)+","+oy0.toFixed(2)+" A"+rOut+","+rOut+" 0 "+large+" 1 "+ox1.toFixed(2)+","+oy1.toFixed(2)+" L"+ix1.toFixed(2)+","+iy1.toFixed(2)+" A"+rIn+","+rIn+" 0 "+large+" 0 "+ix0.toFixed(2)+","+iy0.toFixed(2)+' Z"/>';
+  }
+  function donutMarkup(slices){
+    const total=slices.reduce((n,s)=>n+s.value,0);
+    if(!total)return'<div class="donut-empty">No sessions in this period</div>';
+    const gap=slices.length>1?1.6:0,span=360-gap*slices.length;
+    let start=0;
+    const paths=slices.map((s,i)=>{const color=s.other?DONUT_OTHER:DONUT_COLORS[i%DONUT_COLORS.length],sweep=s.value/total*span,d=donutSlice(50,50,26,42,start,start+sweep,color);start+=sweep+gap;return d}).join("");
+    const lead=slices[0],leadPct=lead.value/total*100,leadTxt=leadPct>=10?leadPct.toFixed(0):leadPct.toFixed(1);
+    const svg='<svg viewBox="0 0 100 100" role="img" aria-label="Share of sessions"><g>'+paths+'</g><text class="donut-center" x="50" y="49.5" text-anchor="middle">'+leadTxt+'%</text><text class="donut-center-sub" x="50" y="60" text-anchor="middle">of sessions</text></svg>';
+    const legend='<ul class="donut-legend">'+slices.map((s,i)=>{const color=s.other?DONUT_OTHER:DONUT_COLORS[i%DONUT_COLORS.length],p=s.value/total*100,pTxt=(p>=10?p.toFixed(0):p.toFixed(1))+"%";return'<li title="'+esc(s.label)+' · '+fmt(s.value)+' sessions"><span class="donut-swatch" style="background:'+color+'"></span><span class="donut-label">'+esc(s.label)+'</span><span class="donut-pct">'+pTxt+'</span></li>'}).join("")+"</ul>";
+    return svg+legend;
+  }
+  function renderDonuts(domain){
+    $("#donuts").hidden=false;
+    const key=keyOf(domain),source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad;
+    $("#donut-source").innerHTML=donutMarkup(topSlices(sumByLabel(source?.records,source?.sources,state.start,state.end,bad)));
+    $("#donut-country").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end)));
+    $("#donut-device").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.device?.records,driver?.device?.labels,state.start,state.end)));
+  }
   function renderFocusContent(domain){
     $("#focus-content").hidden=false;
     $("#focus-title").textContent="Top 5 products and recipes";
