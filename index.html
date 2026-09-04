@@ -99,9 +99,9 @@
         <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
         <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
         <li>Page views / session is page views ÷ sessions after those filters.</li>
-        <li>A domain must be selected before any data is shown.</li>
+        <li>A domain must be selected before any data is shown. Selecting <strong>Total</strong> sums every domain after those filters.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
-        <li>Average time on site is averaged only across days that still have a duration after the exclusions above.</li>
+        <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions.</li>
         <li>Domain ranking and What visitors are viewing show the five domains with the most remaining sessions.</li>
       </ol>
     </div>
@@ -125,6 +125,10 @@
   const iso=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return y+"-"+m+"-"+day}, shift=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
   const addYears=(s,n)=>{const d=new Date(s+"T12:00:00");d.setFullYear(d.getFullYear()+n);return iso(d)};
   const dayCount=(a,b)=>Math.round((Date.parse(b+"T00:00:00Z")-Date.parse(a+"T00:00:00Z"))/86400000)+1;
+  const TOTAL_KEY="__total__",TOTAL_DOMAIN={key:TOTAL_KEY,host:"all domains",label:"Total"};
+  const isTotal=key=>key===TOTAL_KEY,resolveDomain=key=>key===TOTAL_KEY?TOTAL_DOMAIN:D.domains.find(d=>keyOf(d)===key),domainKeys=()=>D.domains.map(d=>keyOf(d));
+  const addMap=(target,source)=>{source.forEach((v,k)=>target.set(k,(target.get(k)||0)+v));return target};
+  const mergeMaps=maps=>{const m=new Map();maps.forEach(map=>{if(map)addMap(m,map)});return m};
   const state={host:"",compare:"",periodCompare:"",start:iso(shift(latest,-29)),end:D.dataEnd,metric:"sessions",type:"line"};
   function rangeDates(start,end){const out=[];if(!start||!end||start>end)return out;for(let d=new Date(start+"T12:00:00"),last=new Date(end+"T12:00:00");d<=last;d.setDate(d.getDate()+1))out.push(iso(d));return out}
   function comparePeriod(){
@@ -139,7 +143,8 @@
     return null;
   }
   const regionOrder=["APAC","Americas","Europe","Corporate","Others"],regionKeys={APAC:["hk.lkk.com","malaysia.lkk.com","tw.lkk.com","au.lkk.com","sg.lkk.com","kr.lkk.com","id.lkk.com","nz.lkk.com","jp.lkk.com","ph.lkk.com","in.lkk.com","vn.lkk.com"],Americas:["usa.lkk.com","ca.lkk.com","csa.lkk.com"],Europe:["eu.lkk.com","gawa:259299200","gawa:270258410","gawa:274757322","gawa:359131146","gawa:359138868","gawa:359140744","gawa:359143062","gawa:359148543","gawa:359149333","gawa:359151329","gawa:359159762","gawa:359359758","gawa:435274171","gawa:482136493","gawa:507647134"],Corporate:["corporate.lkk.com"],Others:["gawa:359143969"]},regionMap=new Map(Object.entries(regionKeys).flatMap(([region,keys])=>keys.map(key=>[key,region])));
-  function options(includeNone=false){const none=includeNone?'<option value="">No comparison</option>':'<option value="">Select a domain</option>';return none+regionOrder.map(region=>{const items=D.domains.filter(d=>(regionMap.get(keyOf(d))||"Others")===region).sort((a,b)=>a.label.localeCompare(b.label));return'<option class="group-option" disabled>— '+region+' —</option>'+items.map(d=>'<option value="'+keyOf(d)+'">'+d.label+' · '+d.host+'</option>').join("")}).join("")}
+  function options(includeNone=false){const none=includeNone?'<option value="">No comparison</option>':'<option value="">Select a domain</option>';const total='<option class="group-option" disabled>— Overview —</option><option value="'+TOTAL_KEY+'">Total · all domains</option>';return none+total+regionOrder.map(region=>{const items=D.domains.filter(d=>(regionMap.get(keyOf(d))||"Others")===region).sort((a,b)=>a.label.localeCompare(b.label));return'<option class="group-option" disabled>— '+region+' —</option>'+items.map(d=>'<option value="'+keyOf(d)+'">'+d.label+' · '+d.host+'</option>').join("")}).join("")}
+  function syncCompareTotalOption(){const opt=$("#compare").querySelector('option[value="'+TOTAL_KEY+'"]');if(opt)opt.disabled=isTotal(state.host);if(state.compare===state.host||(isTotal(state.host)&&isTotal(state.compare))){state.compare="";$("#compare").value=""}}
   $("#domain").innerHTML=options();$("#compare").innerHTML=options(true);$("#domain").value="";$("#compare").value="";$("#compare").disabled=true;$("#period-compare").disabled=true;
   $("#start-date").min=$("#end-date").min=D.dataStart;$("#start-date").max=$("#end-date").max=D.dataEnd;
   const dateFmt=s=>new Date(s+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric"});
@@ -174,7 +179,19 @@
     return{daily};
   }
   function chinaAdjust(key,from=state.start,to=state.end){const daily=chinaProfile(key,from,to).daily;return(day,label)=>label==="China"||label==="desktop"?(daily.get(day)||[0])[0]:0}
-  function rows(key,from=state.start,to=state.end){const durations=durationMaps[key]||new Map(),profile=sourceProfile(key,from,to),china=chinaProfile(key,from,to);return (D.series[key]||[]).filter(x=>x.date>=from&&x.date<=to).map(x=>{const rawDuration=durations.get(x.date)||0,day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000),a=profile.daily.get(day)||[0,0,0,0],c=china.daily.get(day)||[0,0,0,0],sessions=Math.max(0,x.sessions-a[0]-c[0]),users=Math.max(0,x.users-a[1]-c[1]),views=Math.max(0,x.views-a[2]-c[2]),duration=sessions?Math.max(0,(rawDuration*x.sessions-a[3]-c[3])/sessions):0;return{...x,sessions,users,views,duration,excludedSessions:a[0]+c[0]}})}
+  function rows(key,from=state.start,to=state.end){
+    if(isTotal(key)){
+      const byDate=new Map();
+      domainKeys().forEach(k=>rows(k,from,to).forEach(row=>{
+        const acc=byDate.get(row.date)||{date:row.date,sessions:0,users:0,views:0,durNum:0,durDen:0,excludedSessions:0};
+        acc.sessions+=row.sessions||0;acc.users+=row.users||0;acc.views+=row.views||0;acc.excludedSessions+=row.excludedSessions||0;
+        acc.durNum+=(row.duration||0)*(row.sessions||0);acc.durDen+=row.sessions||0;
+        byDate.set(row.date,acc);
+      }));
+      return [...byDate.keys()].sort().map(date=>{const x=byDate.get(date);return{date:x.date,sessions:x.sessions,users:x.users,views:x.views,duration:x.durDen?x.durNum/x.durDen:0,excludedSessions:x.excludedSessions}});
+    }
+    const durations=durationMaps[key]||new Map(),profile=sourceProfile(key,from,to),china=chinaProfile(key,from,to);return (D.series[key]||[]).filter(x=>x.date>=from&&x.date<=to).map(x=>{const rawDuration=durations.get(x.date)||0,day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000),a=profile.daily.get(day)||[0,0,0,0],c=china.daily.get(day)||[0,0,0,0],sessions=Math.max(0,x.sessions-a[0]-c[0]),users=Math.max(0,x.users-a[1]-c[1]),views=Math.max(0,x.views-a[2]-c[2]),duration=sessions?Math.max(0,(rawDuration*x.sessions-a[3]-c[3])/sessions):0;return{...x,sessions,users,views,duration,excludedSessions:a[0]+c[0]}})
+  }
   function filledRows(key,from,to){const map=new Map(rows(key,from,to).map(x=>[x.date,x]));return rangeDates(from,to).map(date=>map.get(date)||{date,sessions:0,users:0,views:0,duration:0})}
   function total(key,metric){return rows(key).reduce((a,x)=>a+(x[metric]||0),0)}
   function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;return{data,sessions,users,views,rate:sessions?views/sessions:NaN,duration}}
@@ -203,6 +220,14 @@
   }
   function driverPicks(keyA,startA,endA,keyB,startB,endB,wantUp){
     if(state.metric==="duration")return null;
+    if(isTotal(keyA)||isTotal(keyB)){
+      const names=["Source / medium","Campaign","Country","Device"],daysA=Math.max(1,dayCount(startA,endA)),daysB=Math.max(1,dayCount(startB,endB));
+      const keysA=isTotal(keyA)?domainKeys():[keyA],keysB=isTotal(keyB)?domainKeys():[keyB];
+      const dim=(keys,from,to,kind)=>{const m=new Map();keys.forEach(key=>{if(kind==="source"){const source=window.GA4_SOURCE_DATA?.[key];if(!source)return;addMap(m,sumByLabel(source.records,source.sources,from,to,sourceProfile(key,from,to).bad))}else{const driver=window.GA4_DRIVER_COMPLETE?.[key];if(!driver)return;const adj=kind==="campaign"?null:chinaAdjust(key,from,to);addMap(m,sumByLabel(driver[kind]?.records,driver[kind]?.labels,from,to,null,adj))}});return m};
+      const picks=["source","campaign","country","device"].map(kind=>pickLabel(dim(keysA,startA,endA,kind),dim(keysB,startB,endB,kind),daysA,daysB,wantUp));
+      if(!picks.every(Boolean))return null;
+      return picks.map((p,i)=>({name:names[i],label:p.label}));
+    }
     const driverA=window.GA4_DRIVER_COMPLETE?.[keyA],driverB=window.GA4_DRIVER_COMPLETE?.[keyB],sourceA=window.GA4_SOURCE_DATA?.[keyA],sourceB=window.GA4_SOURCE_DATA?.[keyB];
     if(!driverA||!driverB||!sourceA||!sourceB)return null;
     const bad=new Set([...sourceProfile(keyA,startA,endA).bad,...sourceProfile(keyB,startB,endB).bad]),daysA=Math.max(1,dayCount(startA,endA)),daysB=Math.max(1,dayCount(startB,endB));
@@ -255,7 +280,7 @@
   }
   function setKpi(id,noteId,value,formatter,compareValue,compareDomain,defaultNote){$(id).textContent=formatter(value);const note=$(noteId);if(!compareDomain){note.textContent=defaultNote;return}const delta=Number.isFinite(compareValue)&&compareValue!==0?(value-compareValue)/compareValue*100:NaN;const pct=Number.isFinite(delta)?(delta>=0?"+":"")+delta.toFixed(1)+"%":"",tone=Number.isFinite(delta)?(delta>0?"up":delta<0?"down":""):"";note.innerHTML="vs "+esc(compareDomain.label)+": "+formatter(compareValue)+(pct?" · <span class=\"delta"+(tone?" "+tone:"")+"\">"+pct+"</span>":"")}
   function render(){
-    const domain=D.domains.find(d=>keyOf(d)===state.host);
+    const domain=resolveDomain(state.host);
     $("#stamp").textContent=longDate(state.start)+" – "+longDate(state.end);
     $("#content-range").textContent=dateFmt(state.start)+" – "+dateFmt(state.end);
     $("#domain").closest(".control").classList.toggle("needs-domain",!domain);
@@ -280,7 +305,8 @@
       $("#donuts").hidden=true;
       return;
     }
-    const primary=stats(state.host),period=comparePeriod(),compareDomain=state.compare?D.domains.find(d=>keyOf(d)===state.compare):null,periodTarget=period?{label:period.label}:null,comparison=compareDomain?stats(state.compare):period?stats(state.host,period.start,period.end):null,kpiCompare=compareDomain||periodTarget;
+    syncCompareTotalOption();
+    const primary=stats(state.host),period=comparePeriod(),compareDomain=state.compare?resolveDomain(state.compare):null,periodTarget=period?{label:period.label}:null,comparison=compareDomain?stats(state.compare):period?stats(state.host,period.start,period.end):null,kpiCompare=compareDomain||periodTarget;
     $("#compare").disabled=!!period;$("#period-compare").disabled=!!compareDomain;
     $("#compare").title=period?"Unavailable while comparing another period":"";
     $("#period-compare").title=compareDomain?"Unavailable while comparing another domain":"";
@@ -358,8 +384,16 @@
     $("#insight").innerHTML=insightHtml(observation,driverActions(picks,pct>=0));
   }
   function contentRanks(key,type){
+    const start=Math.round((Date.parse(state.start+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(state.end+"T00:00:00Z")-base)/86400000);
+    if(isTotal(key)){
+      const totals=new Map();let matched=false;
+      domainKeys().forEach(k=>{const c=D.content[k]?.[type];if(!c)return;matched=true;c.records.forEach(r=>{if(r[0]<start||r[0]>end)return;const title=c.paths[r[1]][1];totals.set(title,(totals.get(title)||0)+r[2])})});
+      if(!matched)return null;
+      const total=[...totals.values()].reduce((n,v)=>n+v,0),items=[...totals].map(([title,sessions])=>({title,sessions,pct:total?sessions/total*100:0})).sort((a,b)=>b.sessions-a.sessions).slice(0,5);
+      return{total,items};
+    }
     const c=D.content[key]?.[type];if(!c)return null;
-    const start=Math.round((Date.parse(state.start+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(state.end+"T00:00:00Z")-base)/86400000),totals=new Map();
+    const totals=new Map();
     c.records.forEach(r=>{if(r[0]>=start&&r[0]<=end)totals.set(r[1],(totals.get(r[1])||0)+r[2])});
     const total=[...totals.values()].reduce((n,v)=>n+v,0),items=[...totals].map(([i,sessions])=>({title:c.paths[i][1],sessions,pct:total?sessions/total*100:0})).sort((a,b)=>b.sessions-a.sessions).slice(0,5);
     return{total,items};
@@ -404,16 +438,18 @@
   function renderDonuts(domain){
     $("#donuts").hidden=false;
     $("#donuts-title").textContent="Session mix · "+domain.label;
-    $("#donuts-sub").textContent=domain.host+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
-    const key=keyOf(domain),source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad,adj=chinaAdjust(key,state.start,state.end);
-    $("#donut-source").innerHTML=donutMarkup(topSlices(sumByLabel(source?.records,source?.sources,state.start,state.end,bad)));
-    $("#donut-country").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end,null,adj)));
-    $("#donut-device").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.device?.records,driver?.device?.labels,state.start,state.end,null,adj)));
+    $("#donuts-sub").textContent=(isTotal(keyOf(domain))?"all domains":domain.host)+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
+    const keys=isTotal(keyOf(domain))?domainKeys():[keyOf(domain)];
+    const sourceMaps=[],countryMaps=[],deviceMaps=[];
+    keys.forEach(key=>{const source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad,adj=chinaAdjust(key,state.start,state.end);sourceMaps.push(sumByLabel(source?.records,source?.sources,state.start,state.end,bad));countryMaps.push(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end,null,adj));deviceMaps.push(sumByLabel(driver?.device?.records,driver?.device?.labels,state.start,state.end,null,adj))});
+    $("#donut-source").innerHTML=donutMarkup(topSlices(mergeMaps(sourceMaps)));
+    $("#donut-country").innerHTML=donutMarkup(topSlices(mergeMaps(countryMaps)));
+    $("#donut-device").innerHTML=donutMarkup(topSlices(mergeMaps(deviceMaps)));
   }
   function renderFocusContent(domain){
     $("#focus-content").hidden=false;
     $("#focus-title").textContent="Top 5 products and recipes";
-    $("#focus-sub").textContent=domain.label+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
+    $("#focus-sub").textContent=(isTotal(keyOf(domain))?"Total · all domains":domain.label)+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
     $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true);
     $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true);
   }
@@ -421,8 +457,8 @@
     const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"sessions")})).sort((a,b)=>b.value-a.value).slice(0,5);
     $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,true)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
   }
-  $("#domain").addEventListener("change",e=>{state.host=e.target.value;if(state.compare===state.host){state.compare="";$("#compare").value=""}render()});
-  $("#compare").addEventListener("change",e=>{state.compare=e.target.value===state.host?"":e.target.value;if(!state.compare)e.target.value="";if(state.compare){state.periodCompare="";$("#period-compare").value=""}render()});
+  $("#domain").addEventListener("change",e=>{state.host=e.target.value;syncCompareTotalOption();render()});
+  $("#compare").addEventListener("change",e=>{const next=e.target.value;state.compare=(next===state.host||(isTotal(state.host)&&isTotal(next)))?"":next;if(!state.compare)e.target.value="";if(state.compare){state.periodCompare="";$("#period-compare").value=""}render()});
   $("#period-compare").addEventListener("change",e=>{state.periodCompare=e.target.value;if(state.periodCompare){state.compare="";$("#compare").value=""}render()});
   $("#period").addEventListener("change",e=>{setPreset(e.target.value);render()});$("#metric").addEventListener("change",e=>{state.metric=e.target.value;render()});
   ["start-date","end-date"].forEach(id=>$("#"+id).addEventListener("change",e=>{state[id==="start-date"?"start":"end"]=e.target.value;$("#period").value="custom";$("#start-date").disabled=$("#end-date").disabled=false;if(state.start>state.end){if(id==="start-date")state.end=state.start;else state.start=state.end}syncDates();render()}));
