@@ -301,8 +301,8 @@
       return;
     }
     if(compareDomain){
-      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,detail=Number.isFinite(pct)?driverDetail(keyOf(compareDomain),state.start,state.end,state.host,state.start,state.end,pct>=0):"";
-      $("#insight").innerHTML="<strong>Comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period."+detail;
+      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN;
+      $("#insight").innerHTML="<strong>Comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period.";
       return;
     }
     const data=primary.data;if(data.length<4){$("#insight").textContent="Not enough data is available for a trend observation.";return}
