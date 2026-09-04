@@ -41,7 +41,7 @@
 <main class="shell">
   <header class="topbar">
     <div class="brand"><img class="brand-mark" src="./images/lkk-logo-corporate.svg" alt="Lee Kum Kee" width="61" height="46"><div><h1>Digital Performance</h1><div class="eyebrow">Lee Kum Kee websites · Google Analytics 4</div></div></div>
-    <div class="live"><span class="dot"></span><span><strong>GA4 connected</strong><span class="desktop-note"> · Zero-time sources filtered</span></span></div>
+    <div class="live"><span class="dot"></span><span><strong>GA4 connected</strong><span class="desktop-note"> · Zero-time sources and low-engagement China (0–3s) filtered</span></span></div>
   </header>
 
   <section class="toolbar" aria-label="Dashboard controls">
@@ -88,7 +88,7 @@
 
   <div class="section-head"><div><h2>What visitors are viewing</h2><p>Top five product and recipe detail pages for each leading domain</p></div><div class="badge" id="content-range">Selected period</div></div>
   <section class="content-grid" id="content-grid" aria-label="Top products and recipes"></section>
-  <footer><span>Source: Google Analytics 4 via connected Supermetrics account · Source/medium groups with 0:00 average duration excluded</span><span id="footer-sync"></span></footer>
+  <footer><span>Source: Google Analytics 4 via connected Supermetrics account · Source/medium groups with 0:00 average duration and low-engagement China traffic (0–3s) excluded</span><span id="footer-sync"></span></footer>
 </main>
 <script src="./data.js?v=20260904-ux2"></script>
 <script src="./duration.js?v=20260904-ux2"></script>
@@ -135,7 +135,29 @@
     source.records.forEach(r=>{if(r[0]<start||r[0]>end||!bad.has(source.sources[r[1]]))return;const d=daily.get(r[0])||[0,0,0,0];d[0]+=r[2];d[1]+=r[3];d[2]+=r[4];d[3]+=r[5];daily.set(r[0],d)});
     return{bad,daily};
   }
-  function rows(key,from=state.start,to=state.end){const durations=durationMaps[key]||new Map(),profile=sourceProfile(key,from,to);return (D.series[key]||[]).filter(x=>x.date>=from&&x.date<=to).map(x=>{const rawDuration=durations.get(x.date)||0,day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000),a=profile.daily.get(day)||[0,0,0,0],sessions=Math.max(0,x.sessions-a[0]),users=Math.max(0,x.users-a[1]),views=Math.max(0,x.views-a[2]),duration=sessions?Math.max(0,(rawDuration*x.sessions-a[3])/sessions):0;return{...x,sessions,users,views,duration,excludedSessions:a[0]}})}
+  const CHINA_LOW_ENGAGEMENT_MAX=3;
+  function chinaProfile(key,from=state.start,to=state.end){
+    const adj=window.GA4_BOT_ADJUSTMENTS?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],durations=durationMaps[key]||new Map();
+    const start=Math.round((Date.parse(from+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(to+"T00:00:00Z")-base)/86400000),daily=new Map();
+    if(adj)Object.entries(adj).forEach(([date,v])=>{if(date<from||date>to||!(v[0]>0)||v[3]/v[0]>CHINA_LOW_ENGAGEMENT_MAX)return;daily.set(Math.round((Date.parse(date+"T00:00:00Z")-base)/86400000),[v[0],v[1],v[2],v[3]])});
+    const country=driver?.country,chinaIdx=country?.labels.indexOf("China");
+    if(country&&chinaIdx>=0){
+      const chinaByDay=new Map(),zeros=sourceProfile(key,from,to).daily;
+      country.records.forEach(r=>{if(r[0]<start||r[0]>end||r[1]!==chinaIdx)return;chinaByDay.set(r[0],(chinaByDay.get(r[0])||0)+r[2])});
+      (D.series[key]||[]).forEach(x=>{
+        if(x.date<from||x.date>to)return;
+        const day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000);if(daily.has(day))return;
+        const china=chinaByDay.get(day)||0;if(!china)return;
+        const z=zeros.get(day)||[0,0,0,0],raw=durations.get(x.date)||0,sess=Math.max(0,x.sessions-z[0]),dur=sess?Math.max(0,(raw*x.sessions-z[3])/sess):0;
+        if(dur>CHINA_LOW_ENGAGEMENT_MAX)return;
+        const share=x.sessions?Math.min(1,china/x.sessions):0;
+        daily.set(day,[china,Math.round(x.users*share),Math.round(x.views*share),dur*china]);
+      });
+    }
+    return{daily};
+  }
+  function chinaAdjust(key,from=state.start,to=state.end){const daily=chinaProfile(key,from,to).daily;return(day,label)=>label==="China"||label==="desktop"?(daily.get(day)||[0])[0]:0}
+  function rows(key,from=state.start,to=state.end){const durations=durationMaps[key]||new Map(),profile=sourceProfile(key,from,to),china=chinaProfile(key,from,to);return (D.series[key]||[]).filter(x=>x.date>=from&&x.date<=to).map(x=>{const rawDuration=durations.get(x.date)||0,day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000),a=profile.daily.get(day)||[0,0,0,0],c=china.daily.get(day)||[0,0,0,0],sessions=Math.max(0,x.sessions-a[0]-c[0]),users=Math.max(0,x.users-a[1]-c[1]),views=Math.max(0,x.views-a[2]-c[2]),duration=sessions?Math.max(0,(rawDuration*x.sessions-a[3]-c[3])/sessions):0;return{...x,sessions,users,views,duration,excludedSessions:a[0]+c[0]}})}
   function filledRows(key,from,to){const map=new Map(rows(key,from,to).map(x=>[x.date,x]));return rangeDates(from,to).map(date=>map.get(date)||{date,sessions:0,users:0,views:0,duration:0})}
   function total(key,metric){return rows(key).reduce((a,x)=>a+(x[metric]||0),0)}
   function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;return{data,sessions,users,views,rate:sessions?views/sessions:NaN,duration}}
@@ -149,9 +171,9 @@
   }
   function syncDates(){$("#start-date").value=state.start;$("#end-date").value=state.end}
   function metricValue(s){return s[state.metric]}
-  function sumByLabel(records,labels,from,to,bad){
+  function sumByLabel(records,labels,from,to,bad,adjust){
     const m=new Map();if(!records||!labels)return m;
-    records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=labels[r[1]];if(date<from||date>to||(bad&&bad.has(label)))return;m.set(label,(m.get(label)||0)+r[2])});
+    records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=labels[r[1]];if(date<from||date>to||(bad&&bad.has(label)))return;const n=Math.max(0,r[2]-(adjust?adjust(r[0],label):0));if(n)m.set(label,(m.get(label)||0)+n)});
     return m;
   }
   function pickLabel(mapA,mapB,daysA,daysB,wantUp){
@@ -163,8 +185,9 @@
     const driverA=window.GA4_DRIVER_COMPLETE?.[keyA],driverB=window.GA4_DRIVER_COMPLETE?.[keyB],sourceA=window.GA4_SOURCE_DATA?.[keyA],sourceB=window.GA4_SOURCE_DATA?.[keyB];
     if(!driverA||!driverB||!sourceA||!sourceB)return"";
     const bad=new Set([...sourceProfile(keyA,startA,endA).bad,...sourceProfile(keyB,startB,endB).bad]),daysA=Math.max(1,dayCount(startA,endA)),daysB=Math.max(1,dayCount(startB,endB));
-    const names=["Source / medium","Campaign","Country","Device"],sets=[[sourceA.records,sourceA.sources,sourceB.records,sourceB.sources,true],[driverA.campaign.records,driverA.campaign.labels,driverB.campaign.records,driverB.campaign.labels,false],[driverA.country.records,driverA.country.labels,driverB.country.records,driverB.country.labels,false],[driverA.device.records,driverA.device.labels,driverB.device.records,driverB.device.labels,false]];
-    const picks=sets.map(([recA,labA,recB,labB,filterBad])=>pickLabel(sumByLabel(recA,labA,startA,endA,filterBad?bad:null),sumByLabel(recB,labB,startB,endB,filterBad?bad:null),daysA,daysB,wantUp));
+    const adjA=chinaAdjust(keyA,startA,endA),adjB=chinaAdjust(keyB,startB,endB);
+    const names=["Source / medium","Campaign","Country","Device"],sets=[[sourceA.records,sourceA.sources,sourceB.records,sourceB.sources,true,null],[driverA.campaign.records,driverA.campaign.labels,driverB.campaign.records,driverB.campaign.labels,false,null],[driverA.country.records,driverA.country.labels,driverB.country.records,driverB.country.labels,false,true],[driverA.device.records,driverA.device.labels,driverB.device.records,driverB.device.labels,false,true]];
+    const picks=sets.map(([recA,labA,recB,labB,filterBad,useChina])=>pickLabel(sumByLabel(recA,labA,startA,endA,filterBad?bad:null,useChina?adjA:null),sumByLabel(recB,labB,startB,endB,filterBad?bad:null,useChina?adjB:null),daysA,daysB,wantUp));
     if(!picks.every(Boolean))return"";
     return" <strong>"+(wantUp?"Increased most":"Decreased most")+":</strong> "+picks.map((p,i)=>names[i]+" — "+esc(p.label)).join(" · ")+".";
   }
@@ -307,10 +330,10 @@
   }
   function renderDonuts(domain){
     $("#donuts").hidden=false;
-    const key=keyOf(domain),source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad;
+    const key=keyOf(domain),source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad,adj=chinaAdjust(key,state.start,state.end);
     $("#donut-source").innerHTML=donutMarkup(topSlices(sumByLabel(source?.records,source?.sources,state.start,state.end,bad)));
-    $("#donut-country").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end)));
-    $("#donut-device").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.device?.records,driver?.device?.labels,state.start,state.end)));
+    $("#donut-country").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end,null,adj)));
+    $("#donut-device").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.device?.records,driver?.device?.labels,state.start,state.end,null,adj)));
   }
   function renderFocusContent(domain){
     $("#focus-content").hidden=false;
