@@ -32,9 +32,9 @@
     .donut-label{color:var(--ink);min-width:0;overflow-wrap:anywhere}.donut-pct{color:var(--muted);white-space:nowrap;font-weight:650}
     .donut-empty{color:var(--muted);font-size:12px;padding:22px 6px;text-align:center;width:100%}
     .donut-center{fill:var(--ink);font-size:13px;font-weight:730;font-family:Inter,ui-sans-serif,sans-serif}.donut-center-sub{fill:#8c8884;font-size:6.5px;font-family:Inter,ui-sans-serif,sans-serif}
-    footer{display:flex;justify-content:space-between;gap:15px;margin-top:28px;color:#817d79;font-size:12px}.desktop-note{display:inline}
+    footer{margin-top:28px;color:#817d79;font-size:12px}.footer-source{display:flex;justify-content:space-between;gap:15px;align-items:baseline}.remarks{margin-top:14px;padding-top:12px;border-top:1px solid #e9e5df}.remarks h2{font:inherit;font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#8c8884;margin:0 0 8px}.remarks ol{margin:0;padding-left:1.15em;line-height:1.55;max-width:980px}.remarks li{margin:0 0 5px}.remarks li:last-child{margin-bottom:0}.desktop-note{display:inline}
     @media(max-width:1100px){.toolbar{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}.content-grid{grid-template-columns:repeat(5,280px)}}
-    @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:flex-start}.live{padding:8px 10px}.desktop-note{display:none}.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.main,.ranking{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-wrap{min-height:250px}.donuts{grid-template-columns:1fr}.content-grid{grid-template-columns:repeat(5,260px)}footer{flex-direction:column}}
+    @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:flex-start}.live{padding:8px 10px}.desktop-note{display:none}.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.main,.ranking{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-wrap{min-height:250px}.donuts{grid-template-columns:1fr}.content-grid{grid-template-columns:repeat(5,260px)}.footer-source{flex-direction:column}}
   </style>
 </head>
 <body>
@@ -89,7 +89,20 @@
 
   <div class="section-head"><div><h2>What visitors are viewing</h2><p>Top five product and recipe detail pages for each leading domain</p></div><div class="badge" id="content-range">Selected period</div></div>
   <section class="content-grid" id="content-grid" aria-label="Top products and recipes"></section>
-  <footer><span>Source: Google Analytics 4 via connected Supermetrics account · Source/medium groups with 0:00 average duration and low-engagement China traffic (0–3s) excluded</span><span id="footer-sync"></span></footer>
+  <footer>
+    <div class="footer-source"><span>Source: Google Analytics 4 via connected Supermetrics account. Figures on this page apply the filters listed in Remarks.</span><span id="footer-sync"></span></div>
+    <div class="remarks">
+      <h2>Remarks</h2>
+      <ol>
+        <li>Select a domain to load any traffic, ranking, or content figures.</li>
+        <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). Year-on-year comparison may reach earlier dates, which show as no data if they sit outside this window.</li>
+        <li>Source/medium groups with an average duration of 0:00 in the selected period are excluded from sessions, users, page views, and time on site (KPIs, chart, ranking, and the source/medium donut).</li>
+        <li>Low-engagement China traffic averaging 0–3 seconds is excluded from those same figures on the KPIs, chart, ranking, country and device donuts, and insights. Product and recipe lists are not split by country, so they are not adjusted.</li>
+        <li>Average time on site is averaged only across days that still have duration after the filters above.</li>
+        <li>Rankings and “What visitors are viewing” list the five domains with the most remaining sessions.</li>
+      </ol>
+    </div>
+  </footer>
 </main>
 <script src="./data.js?v=20260904-ux2"></script>
 <script src="./duration.js?v=20260904-ux2"></script>
@@ -368,7 +381,7 @@
   $("#period").addEventListener("change",e=>{setPreset(e.target.value);render()});$("#metric").addEventListener("change",e=>{state.metric=e.target.value;render()});
   ["start-date","end-date"].forEach(id=>$("#"+id).addEventListener("change",e=>{state[id==="start-date"?"start":"end"]=e.target.value;$("#period").value="custom";$("#start-date").disabled=$("#end-date").disabled=false;if(state.start>state.end){if(id==="start-date")state.end=state.start;else state.start=state.end}syncDates();render()}));
   document.querySelectorAll("[data-type]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-type]").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.type=b.dataset.type;render()}));
-  const sync=new Date(D.refreshedAt).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short",timeZone:D.timezone});$("#stamp").title="Data synced "+sync;$("#footer-sync").textContent="Last GA4 sync: "+sync+" HKT";syncDates();render();
+  const sync=new Date(D.refreshedAt).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short",timeZone:D.timezone});$("#stamp").title="Data synced "+sync;$("#footer-sync").textContent="Last GA4 sync: "+sync+" HKT";$("#remarks-window").textContent=longDate(D.dataStart)+" – "+longDate(D.dataEnd);syncDates();render();
 </script>
 </body>
 </html>
