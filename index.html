@@ -133,8 +133,8 @@
     return m;
   }
   function pickLabel(mapA,mapB,daysA,daysB,wantUp){
-    let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});
-    return best;
+    const vague=s=>{const t=String(s??"").trim().toLowerCase();return!t||t==="(not set)"||t==="not set"},choose=(allowVague)=>{let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{if(!allowVague&&vague(label))return;const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});return best};
+    return choose(false)||choose(true);
   }
   function driverDetail(keyA,startA,endA,keyB,startB,endB,wantUp){
     if(state.metric==="duration")return"";
