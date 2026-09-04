@@ -16,7 +16,7 @@
     .type-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.type-buttons button{border:0;border-radius:7px;padding:7px 4px;background:transparent;color:#aaa7a7;cursor:pointer}.type-buttons button.active{background:#fff;color:#151515}.type-buttons button:focus-visible,.rank-head:focus-visible{outline:3px solid #f19ba1;outline-offset:2px}
     .grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(310px,.9fr);gap:18px;margin-top:18px}.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
     .main{padding:22px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.panel h2{font-family:Georgia,serif;font-size:22px;margin:0 0 5px;font-weight:600}.sub{color:var(--muted);font-size:13px}
-    .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:12px 10px}.kpi-label{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:22px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta{font-weight:700}.kpi-note .delta.up{color:var(--green)}.kpi-note .delta.down{color:var(--red)}
+    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px}.kpi-label{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:25px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta{font-weight:700}.kpi-note .delta.up{color:var(--green)}.kpi-note .delta.down{color:var(--red)}
     .chart-wrap{position:relative;min-height:315px}.chart{width:100%;height:auto;display:block;overflow:visible}.gridline{stroke:#ebe8e2;stroke-width:1}.axistext{fill:#8c8884;font-size:11px}.axistext.compare{fill:#315b8a}.chartline,.compareline{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.compareline{stroke:#315b8a;stroke-width:2.5;stroke-dasharray:8 6}.areafill{fill:url(#area)}.bar{fill:var(--red);opacity:.9}.comparebar{fill:#315b8a;opacity:.85}.point{fill:#fff;stroke:var(--red);stroke-width:2}.comparepoint{fill:#fff;stroke:#315b8a;stroke-width:2}.tooltip{position:absolute;pointer-events:none;background:#151515;color:#fff;padding:9px 11px;border-radius:9px;font-size:12px;box-shadow:0 8px 30px #0003;opacity:0;transform:translate(-50%,-115%);white-space:nowrap;transition:opacity .1s}.legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:3px;border-radius:3px;background:var(--red)}.legend i.compare{background:#315b8a}
     .insights{margin:0 0 18px}.insights:has(#insight:empty){display:none}.insights-label{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 8px}.insight{border-left:3px solid var(--red);background:var(--soft);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}.insight-part+.insight-part{margin-top:10px;padding-top:10px;border-top:1px solid #ecd4d4}.insight-part-label{font-family:Georgia,serif;font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 5px}.insight-part-body{margin:0}.insight-actions{margin:0;padding-left:1.2em}.insight-actions li+li{margin-top:5px}
     .ranking{padding:20px}.ranking ol{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:15px}.domain-rank{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center}.num{font-family:Georgia,serif;color:#a09b96}.domain-name{font-weight:680;font-size:14px}.domain-host{font-size:12px;color:var(--muted);margin-top:2px}.rank-value{font-weight:700;font-size:13px}.track{height:5px;background:#eeeae4;border-radius:5px;overflow:hidden;grid-column:2/4}.track span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:5px}
@@ -64,8 +64,7 @@
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div></div>
         <div class="kpi"><div class="kpi-label">Avg. daily active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Avoids double-counting users</div></div>
         <div class="kpi"><div class="kpi-label">Page views</div><div class="kpi-value" id="kpi-views">—</div><div class="kpi-note" id="note-views">Total in selected period</div></div>
-        <div class="kpi"><div class="kpi-label">Views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
-        <div class="kpi"><div class="kpi-label">Page / session</div><div class="kpi-value" id="kpi-pages">—</div><div class="kpi-note" id="note-pages">Page views per session</div></div>
+        <div class="kpi"><div class="kpi-label">Page views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Average time on site</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-note" id="note-duration">Average session duration</div></div>
       </div>
       <div class="insights" id="insights">
@@ -98,8 +97,8 @@
       <h2>Remarks</h2>
       <ol>
         <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
-        <li>Bot-like traffic is removed from sessions, users, page views, Views / session, Page / session, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
-        <li>Views / session and Page / session both equal page views ÷ sessions after the same bot-like filters. The snapshot stores one views field, labeled Page views.</li>
+        <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
+        <li>Page views / session is page views ÷ sessions after those filters.</li>
         <li>A domain must be selected before any data is shown.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above.</li>
@@ -178,7 +177,7 @@
   function rows(key,from=state.start,to=state.end){const durations=durationMaps[key]||new Map(),profile=sourceProfile(key,from,to),china=chinaProfile(key,from,to);return (D.series[key]||[]).filter(x=>x.date>=from&&x.date<=to).map(x=>{const rawDuration=durations.get(x.date)||0,day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000),a=profile.daily.get(day)||[0,0,0,0],c=china.daily.get(day)||[0,0,0,0],sessions=Math.max(0,x.sessions-a[0]-c[0]),users=Math.max(0,x.users-a[1]-c[1]),views=Math.max(0,x.views-a[2]-c[2]),duration=sessions?Math.max(0,(rawDuration*x.sessions-a[3]-c[3])/sessions):0;return{...x,sessions,users,views,duration,excludedSessions:a[0]+c[0]}})}
   function filledRows(key,from,to){const map=new Map(rows(key,from,to).map(x=>[x.date,x]));return rangeDates(from,to).map(date=>map.get(date)||{date,sessions:0,users:0,views:0,duration:0})}
   function total(key,metric){return rows(key).reduce((a,x)=>a+(x[metric]||0),0)}
-  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN,rate=sessions?views/sessions:NaN;return{data,sessions,users,views,rate,pageRate:rate,duration}}
+  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;return{data,sessions,users,views,rate:sessions?views/sessions:NaN,duration}}
   function setPreset(value){
     let start=state.start,end=D.dataEnd;
     if(/^\d+$/.test(value))start=iso(shift(latest,-(+value-1)));
@@ -267,12 +266,11 @@
       $("#compare").title="";$("#period-compare").title="";
       $("#chart-title").textContent="Traffic trend";
       $("#legend").innerHTML="";
-      $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-pages").textContent=$("#kpi-duration").textContent="—";
+      $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-duration").textContent="—";
       $("#note-sessions").textContent="Total in selected period";
       $("#note-users").textContent="Avoids double-counting users";
       $("#note-views").textContent="Total in selected period";
       $("#note-rate").textContent="Page views per session";
-      $("#note-pages").textContent="Page views per session";
       $("#note-duration").textContent="Average session duration";
       $("#chart").innerHTML='<text x="500" y="160" text-anchor="middle" class="axistext">Select a domain to view traffic</text>';
       $("#insight").textContent="";
@@ -300,7 +298,6 @@
     setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"Avoids double-counting users");
     setKpi("#kpi-views","#note-views",primary.views,fmt,comparison?.views,kpiCompare,"Total in selected period");
     setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Page views per session");
-    setKpi("#kpi-pages","#note-pages",primary.pageRate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.pageRate,kpiCompare,"Page views per session");
     setKpi("#kpi-duration","#note-duration",primary.duration,durationFmt,comparison?.duration,kpiCompare,"Average session duration");
     if(period){
       const primaryPlot=filledRows(state.host,state.start,state.end),compareFilled=filledRows(state.host,period.start,period.end);
