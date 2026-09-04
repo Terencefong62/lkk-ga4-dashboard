@@ -64,7 +64,7 @@
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div></div>
         <div class="kpi"><div class="kpi-label">Avg. daily active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Avoids double-counting users</div></div>
         <div class="kpi"><div class="kpi-label">Page views</div><div class="kpi-value" id="kpi-views">—</div><div class="kpi-note" id="note-views">Total in selected period</div></div>
-        <div class="kpi"><div class="kpi-label">Views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Content depth indicator</div></div>
+        <div class="kpi"><div class="kpi-label">Views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Page / session</div><div class="kpi-value" id="kpi-pages">—</div><div class="kpi-note" id="note-pages">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Average time on site</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-note" id="note-duration">Average session duration</div></div>
       </div>
@@ -98,7 +98,8 @@
       <h2>Remarks</h2>
       <ol>
         <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
-        <li>Bot-like traffic is removed from sessions, users, page views, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists, and Page / session, are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
+        <li>Bot-like traffic is removed from sessions, users, page views, Views / session, Page / session, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
+        <li>Views / session and Page / session both equal page views ÷ sessions after the same bot-like filters. The snapshot stores one views field, labeled Page views.</li>
         <li>A domain must be selected before any data is shown.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above.</li>
@@ -177,20 +178,7 @@
   function rows(key,from=state.start,to=state.end){const durations=durationMaps[key]||new Map(),profile=sourceProfile(key,from,to),china=chinaProfile(key,from,to);return (D.series[key]||[]).filter(x=>x.date>=from&&x.date<=to).map(x=>{const rawDuration=durations.get(x.date)||0,day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000),a=profile.daily.get(day)||[0,0,0,0],c=china.daily.get(day)||[0,0,0,0],sessions=Math.max(0,x.sessions-a[0]-c[0]),users=Math.max(0,x.users-a[1]-c[1]),views=Math.max(0,x.views-a[2]-c[2]),duration=sessions?Math.max(0,(rawDuration*x.sessions-a[3]-c[3])/sessions):0;return{...x,sessions,users,views,duration,excludedSessions:a[0]+c[0]}})}
   function filledRows(key,from,to){const map=new Map(rows(key,from,to).map(x=>[x.date,x]));return rangeDates(from,to).map(date=>map.get(date)||{date,sessions:0,users:0,views:0,duration:0})}
   function total(key,metric){return rows(key).reduce((a,x)=>a+(x[metric]||0),0)}
-  function contentPages(key,from=state.start,to=state.end){
-    const root=D.content?.[key];
-    if(!root)return NaN;
-    const start=Math.round((Date.parse(from+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(to+"T00:00:00Z")-base)/86400000);
-    let n=0,has=false;
-    for(const type of ["product","recipe"]){
-      const recs=root[type]?.records;
-      if(!recs)continue;
-      has=true;
-      recs.forEach(r=>{if(r[0]>=start&&r[0]<=end)n+=r[2]});
-    }
-    return has?n:NaN;
-  }
-  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN,pages=contentPages(key,from,to);return{data,sessions,users,views,rate:sessions?views/sessions:NaN,pages,pageRate:sessions&&Number.isFinite(pages)?pages/sessions:NaN,duration}}
+  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN,rate=sessions?views/sessions:NaN;return{data,sessions,users,views,rate,pageRate:rate,duration}}
   function setPreset(value){
     let start=state.start,end=D.dataEnd;
     if(/^\d+$/.test(value))start=iso(shift(latest,-(+value-1)));
@@ -283,7 +271,7 @@
       $("#note-sessions").textContent="Total in selected period";
       $("#note-users").textContent="Avoids double-counting users";
       $("#note-views").textContent="Total in selected period";
-      $("#note-rate").textContent="Content depth indicator";
+      $("#note-rate").textContent="Page views per session";
       $("#note-pages").textContent="Page views per session";
       $("#note-duration").textContent="Average session duration";
       $("#chart").innerHTML='<text x="500" y="160" text-anchor="middle" class="axistext">Select a domain to view traffic</text>';
@@ -311,7 +299,7 @@
     setKpi("#kpi-sessions","#note-sessions",primary.sessions,fmt,comparison?.sessions,kpiCompare,"Total in selected period");
     setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"Avoids double-counting users");
     setKpi("#kpi-views","#note-views",primary.views,fmt,comparison?.views,kpiCompare,"Total in selected period");
-    setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Content depth indicator");
+    setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Page views per session");
     setKpi("#kpi-pages","#note-pages",primary.pageRate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.pageRate,kpiCompare,"Page views per session");
     setKpi("#kpi-duration","#note-duration",primary.duration,durationFmt,comparison?.duration,kpiCompare,"Average session duration");
     if(period){
