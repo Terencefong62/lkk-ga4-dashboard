@@ -57,7 +57,7 @@
 
   <div class="grid">
     <section class="panel main">
-      <div class="panel-head"><div><h2 id="chart-title">Traffic trend</h2><div class="sub" id="chart-sub"></div></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
+      <div class="panel-head"><div><h2 id="chart-title">Traffic trend</h2></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
       <div class="kpis">
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div></div>
         <div class="kpi"><div class="kpi-label">Avg. daily active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Avoids double-counting users</div></div>
@@ -230,7 +230,6 @@
       $("#compare").disabled=true;$("#period-compare").disabled=true;
       $("#compare").title="";$("#period-compare").title="";
       $("#chart-title").textContent="Traffic trend";
-      $("#chart-sub").textContent="Select a domain to view performance for the selected period";
       $("#legend").innerHTML="";
       $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-pages").textContent=$("#kpi-duration").textContent="—";
       $("#note-sessions").textContent="Total in selected period";
@@ -253,15 +252,12 @@
     $("#period-compare").title=compareDomain?"Unavailable while comparing another domain":"";
     if(compareDomain){
       $("#chart-title").textContent=domain.label+" vs "+compareDomain.label;
-      $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" by day · comparison enabled";
       $("#legend").innerHTML='<span><i></i>'+esc(domain.label)+'</span><span><i class="compare"></i>'+esc(compareDomain.label)+'</span>';
     }else if(period){
       $("#chart-title").textContent=domain.label+" vs "+period.label;
-      $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" aligned by day in range";
       $("#legend").innerHTML='<span><i></i>'+dateFmt(state.start)+" – "+dateFmt(state.end)+" "+state.start.slice(0,4)+'</span><span><i class="compare"></i>'+dateFmt(period.start)+" – "+dateFmt(period.end)+" "+period.start.slice(0,4)+'</span>';
     }else{
       $("#chart-title").textContent=domain.label+" traffic";
-      $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" by day";
       $("#legend").innerHTML="";
     }
     setKpi("#kpi-sessions","#note-sessions",primary.sessions,fmt,comparison?.sessions,kpiCompare,"Total in selected period");
