@@ -208,7 +208,7 @@
   }
   function genericDriver(s){
     const t=String(s??"").trim().toLowerCase().replace(/\s+/g," ");
-    return !t||t==="(not set)"||t==="not set"||t==="(direct)"||t==="direct"||t==="(none)"||t==="none"||t==="(direct) / (none)"||t==="(direct)/(none)"||t==="(not set) / (not set)";
+    return !t||t==="not set"||t==="direct"||t==="none"||/^\([^)]+\)(\s*\/\s*\([^)]+\))*$/.test(t);
   }
   function pickLabel(mapA,mapB,daysA,daysB,wantUp){
     const choose=(allowVague)=>{let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{if(!allowVague&&genericDriver(label))return;const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});return best};
