@@ -24,6 +24,8 @@
     .content-grid{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:7px}.market{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden;min-width:230px}.rank-head{width:100%;border:0;background:#fff;padding:15px 16px;text-align:left;border-bottom:1px solid #eeeae4}.rank-head strong{font-size:14px}.rank-head .host{font-size:12px;font-weight:500;color:var(--muted)}.market-body{padding:13px 15px 16px}.list-title{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:2px 0 9px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}.list-total{text-align:right;white-space:nowrap;letter-spacing:0;color:var(--muted);font-weight:700}.item{display:grid;grid-template-columns:18px 1fr auto;gap:7px;padding:7px 0;border-bottom:1px solid #f0ede8;align-items:start}.item:last-child{border-bottom:0}.item-rank{font-size:11px;color:#a19d98;padding-top:2px}.item-name{font-size:12px;line-height:1.35}.item-value{font-size:11px;color:var(--muted)}.divider{height:1px;background:#e9e5df;margin:12px 0}
     .empty{padding:40px;text-align:center;color:var(--muted)}.insight:empty{display:none}.ranking .empty{list-style:none;padding:28px 8px}.content-grid>.empty{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);padding:40px 20px}.focus-content{margin-top:22px;padding-top:18px;border-top:1px solid #eeeae4}.focus-content[hidden]{display:none}.focus-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}.focus-head h3{font-family:Georgia,serif;font-size:18px;margin:0;font-weight:600}.focus-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.focus-col{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:13px 14px}.focus-col .item-bar{height:4px;background:#eeeae4;border-radius:4px;overflow:hidden;grid-column:1/4;margin:2px 0 4px}.focus-col .item-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2))}@media(max-width:680px){.focus-grid{grid-template-columns:1fr}}
     .donuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid #eeeae4}.donuts[hidden]{display:none}
+    .donuts-head{grid-column:1/-1;display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:2px}
+    .donuts-head h3{font-family:Georgia,serif;font-size:18px;margin:0;font-weight:600}
     .donut-card{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px 15px}.donut-card h3{font-family:Georgia,serif;font-size:16px;margin:0 0 12px;font-weight:600}
     .donut-body{display:flex;align-items:center;gap:12px}.donut-body svg{width:118px;height:118px;flex:0 0 118px}
     .donut-legend{list-style:none;margin:0;padding:0;display:grid;gap:5px;min-width:0;flex:1}
@@ -72,6 +74,7 @@
       </div>
       <div class="chart-wrap" id="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 1000 315" role="img" aria-label="Traffic trend chart"></svg><div class="tooltip" id="tooltip"></div></div>
       <div class="donuts" id="donuts" hidden>
+        <div class="donuts-head"><h3 id="donuts-title">Session mix</h3><div class="sub" id="donuts-sub"></div></div>
         <article class="donut-card"><h3>Source / medium</h3><div class="donut-body" id="donut-source"></div></article>
         <article class="donut-card"><h3>Demographic</h3><div class="donut-body" id="donut-country"></div></article>
         <article class="donut-card"><h3>Device</h3><div class="donut-body" id="donut-device"></div></article>
@@ -355,6 +358,8 @@
   }
   function renderDonuts(domain){
     $("#donuts").hidden=false;
+    $("#donuts-title").textContent="Session mix · "+domain.label;
+    $("#donuts-sub").textContent=domain.host+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
     const key=keyOf(domain),source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad,adj=chinaAdjust(key,state.start,state.end);
     $("#donut-source").innerHTML=donutMarkup(topSlices(sumByLabel(source?.records,source?.sources,state.start,state.end,bad)));
     $("#donut-country").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end,null,adj)));
