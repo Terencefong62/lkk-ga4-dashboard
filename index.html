@@ -335,7 +335,7 @@
   function marketActions(movers,from,to){
     const items=[];
     (movers.up||[]).forEach(m=>{
-      items.push("Study <strong>"+esc(m.label)+"</strong>'s Session mix and Top 5 products and recipes to see what is working, then scale those channels.");
+      items.push("Study Session mix and Top 5 products and recipes for <strong>"+esc(m.label)+"</strong> to see what is working, then scale those channels.");
     });
     (movers.down||[]).forEach(m=>{
       const china=chinaVolume(m.key,from,to)>=80;
