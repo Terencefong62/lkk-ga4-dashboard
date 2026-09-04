@@ -16,14 +16,16 @@
     .type-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.type-buttons button{border:0;border-radius:7px;padding:7px 4px;background:transparent;color:#aaa7a7;cursor:pointer}.type-buttons button.active{background:#fff;color:#151515}.type-buttons button:focus-visible,.rank-head:focus-visible{outline:3px solid #f19ba1;outline-offset:2px}
     .grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(310px,.9fr);gap:18px;margin-top:18px}.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
     .main{padding:22px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.panel h2{font-family:Georgia,serif;font-size:22px;margin:0 0 5px;font-weight:600}.sub{color:var(--muted);font-size:13px}
-    .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:12px 10px}.kpi-label{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:22px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta{font-weight:700}.kpi-note .delta.up{color:var(--green)}.kpi-note .delta.down{color:var(--red)}
+    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px}.kpi-label{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:25px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta{font-weight:700}.kpi-note .delta.up{color:var(--green)}.kpi-note .delta.down{color:var(--red)}
     .chart-wrap{position:relative;min-height:315px}.chart{width:100%;height:auto;display:block;overflow:visible}.gridline{stroke:#ebe8e2;stroke-width:1}.axistext{fill:#8c8884;font-size:11px}.axistext.compare{fill:#315b8a}.chartline,.compareline{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.compareline{stroke:#315b8a;stroke-width:2.5;stroke-dasharray:8 6}.areafill{fill:url(#area)}.bar{fill:var(--red);opacity:.9}.comparebar{fill:#315b8a;opacity:.85}.point{fill:#fff;stroke:var(--red);stroke-width:2}.comparepoint{fill:#fff;stroke:#315b8a;stroke-width:2}.tooltip{position:absolute;pointer-events:none;background:#151515;color:#fff;padding:9px 11px;border-radius:9px;font-size:12px;box-shadow:0 8px 30px #0003;opacity:0;transform:translate(-50%,-115%);white-space:nowrap;transition:opacity .1s}.legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:3px;border-radius:3px;background:var(--red)}.legend i.compare{background:#315b8a}
-    .insights{margin:0 0 18px}.insights:has(#insight:empty){display:none}.insights-label{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 8px}.insight{border-left:3px solid var(--red);background:var(--soft);padding:11px 13px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}
+    .insights{margin:0 0 18px}.insights:has(#insight:empty){display:none}.insights-label{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 8px}.insight{border-left:3px solid var(--red);background:var(--soft);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}.insight-part+.insight-part{margin-top:10px;padding-top:10px;border-top:1px solid #ecd4d4}.insight-part-label{font-family:Georgia,serif;font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 5px}.insight-part-body{margin:0}.insight-actions{margin:0;padding-left:1.2em}.insight-actions li+li{margin-top:5px}
     .ranking{padding:20px}.ranking ol{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:15px}.domain-rank{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center}.num{font-family:Georgia,serif;color:#a09b96}.domain-name{font-weight:680;font-size:14px}.domain-host{font-size:12px;color:var(--muted);margin-top:2px}.rank-value{font-weight:700;font-size:13px}.track{height:5px;background:#eeeae4;border-radius:5px;overflow:hidden;grid-column:2/4}.track span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:5px}
     .section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:30px 0 14px}.section-head h2{font-family:Georgia,serif;margin:0;font-size:25px}.section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}.badge{font-size:12px;background:#ece8e1;border-radius:999px;padding:7px 11px;color:#625e5b;white-space:nowrap}
-    .content-grid{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:7px}.market{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden;min-width:230px}.rank-head{width:100%;border:0;background:#fff;padding:15px 16px;text-align:left;border-bottom:1px solid #eeeae4}.rank-head strong{font-size:14px}.rank-head .host{font-size:12px;font-weight:500;color:var(--muted)}.market-body{padding:13px 15px 16px}.list-title{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:2px 0 9px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}.list-total{text-align:right;white-space:nowrap;letter-spacing:0;color:var(--muted);font-weight:700}.item{display:grid;grid-template-columns:18px 1fr auto;gap:7px;padding:7px 0;border-bottom:1px solid #f0ede8;align-items:start}.item:last-child{border-bottom:0}.item-rank{font-size:11px;color:#a19d98;padding-top:2px}.item-name{font-size:12px;line-height:1.35}.item-value{font-size:11px;color:var(--muted)}.divider{height:1px;background:#e9e5df;margin:12px 0}
+    .content-grid{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:7px}.market{background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);overflow:hidden;min-width:230px}.rank-head{width:100%;border:0;background:#fff;padding:15px 16px;text-align:left;border-bottom:1px solid #eeeae4}.rank-head strong{font-size:14px}.rank-head .host{font-size:12px;font-weight:500;color:var(--muted)}.market-body{padding:13px 15px 16px}.list-title{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:2px 0 9px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}.list-total{text-align:right;white-space:nowrap;letter-spacing:0;color:var(--muted);font-weight:700}.item{display:grid;grid-template-columns:18px 1fr auto;gap:7px;padding:7px 0;border-bottom:1px solid #f0ede8;align-items:start}.item:last-child{border-bottom:0}.item-rank{font-size:11px;color:#a19d98;padding-top:2px}.item-name{font-size:12px;line-height:1.35}.item-value{font-size:11px;color:var(--muted);white-space:nowrap}.divider{height:1px;background:#e9e5df;margin:12px 0}
     .empty{padding:40px;text-align:center;color:var(--muted)}.insight:empty{display:none}.ranking .empty{list-style:none;padding:28px 8px}.content-grid>.empty{grid-column:1/-1;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);padding:40px 20px}.focus-content{margin-top:22px;padding-top:18px;border-top:1px solid #eeeae4}.focus-content[hidden]{display:none}.focus-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}.focus-head h3{font-family:Georgia,serif;font-size:18px;margin:0;font-weight:600}.focus-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.focus-col{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:13px 14px}.focus-col .item-bar{height:4px;background:#eeeae4;border-radius:4px;overflow:hidden;grid-column:1/4;margin:2px 0 4px}.focus-col .item-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2))}@media(max-width:680px){.focus-grid{grid-template-columns:1fr}}
     .donuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid #eeeae4}.donuts[hidden]{display:none}
+    .donuts-head{grid-column:1/-1;display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:2px}
+    .donuts-head h3{font-family:Georgia,serif;font-size:18px;margin:0;font-weight:600}
     .donut-card{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px 15px}.donut-card h3{font-family:Georgia,serif;font-size:16px;margin:0 0 12px;font-weight:600}
     .donut-body{display:flex;align-items:center;gap:12px}.donut-body svg{width:118px;height:118px;flex:0 0 118px}
     .donut-legend{list-style:none;margin:0;padding:0;display:grid;gap:5px;min-width:0;flex:1}
@@ -41,7 +43,7 @@
 <main class="shell">
   <header class="topbar">
     <div class="brand"><img class="brand-mark" src="./images/lkk-logo-corporate.svg" alt="Lee Kum Kee" width="61" height="46"><div><h1>Digital Performance</h1><div class="eyebrow">Lee Kum Kee websites · Google Analytics 4</div></div></div>
-    <div class="live"><span class="dot"></span><span><strong>GA4 connected</strong><span class="desktop-note"> · Zero-time sources and low-engagement China (0–3s) filtered</span></span></div>
+    <div class="live"><span class="dot"></span><span><strong>GA4 connected</strong><span class="desktop-note"> · Bot-like traffic filtered · see Remarks</span></span></div>
   </header>
 
   <section class="toolbar" aria-label="Dashboard controls">
@@ -57,13 +59,12 @@
 
   <div class="grid">
     <section class="panel main">
-      <div class="panel-head"><div><h2 id="chart-title">Traffic trend</h2><div class="sub" id="chart-sub"></div></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
+      <div class="panel-head"><div><h2 id="chart-title">Traffic trend</h2></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
       <div class="kpis">
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div></div>
         <div class="kpi"><div class="kpi-label">Avg. daily active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Avoids double-counting users</div></div>
         <div class="kpi"><div class="kpi-label">Page views</div><div class="kpi-value" id="kpi-views">—</div><div class="kpi-note" id="note-views">Total in selected period</div></div>
-        <div class="kpi"><div class="kpi-label">Views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Content depth indicator</div></div>
-        <div class="kpi"><div class="kpi-label">Page / session</div><div class="kpi-value" id="kpi-pages">—</div><div class="kpi-note" id="note-pages">Page views per session</div></div>
+        <div class="kpi"><div class="kpi-label">Page views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Average time on site</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-note" id="note-duration">Average session duration</div></div>
       </div>
       <div class="insights" id="insights">
@@ -72,6 +73,7 @@
       </div>
       <div class="chart-wrap" id="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 1000 315" role="img" aria-label="Traffic trend chart"></svg><div class="tooltip" id="tooltip"></div></div>
       <div class="donuts" id="donuts" hidden>
+        <div class="donuts-head"><h3 id="donuts-title">Session mix</h3><div class="sub" id="donuts-sub"></div></div>
         <article class="donut-card"><h3>Source / medium</h3><div class="donut-body" id="donut-source"></div></article>
         <article class="donut-card"><h3>Demographic</h3><div class="donut-body" id="donut-country"></div></article>
         <article class="donut-card"><h3>Device</h3><div class="donut-body" id="donut-device"></div></article>
@@ -94,8 +96,9 @@
     <div class="remarks">
       <h2>Remarks</h2>
       <ol>
-        <li>Source/medium groups with 0:00 average duration in the selected period are excluded from sessions, users, page views, and time on site (KPI cards, trend chart, domain ranking, and the Source / medium donut).</li>
-        <li>Low-engagement China traffic with an average session duration of 0–3 seconds is excluded from those same figures, plus the country and device donuts and Actionable Insights. On days when remaining time on site is still 0–3 seconds, China sessions for that day are also dropped. Product and recipe lists, and Page / session, are not split by country and are not reduced by this filter.</li>
+        <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
+        <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, domain ranking, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut.</li>
+        <li>Page views / session is page views ÷ sessions after those filters.</li>
         <li>A domain must be selected before any data is shown.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above.</li>
@@ -174,20 +177,7 @@
   function rows(key,from=state.start,to=state.end){const durations=durationMaps[key]||new Map(),profile=sourceProfile(key,from,to),china=chinaProfile(key,from,to);return (D.series[key]||[]).filter(x=>x.date>=from&&x.date<=to).map(x=>{const rawDuration=durations.get(x.date)||0,day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000),a=profile.daily.get(day)||[0,0,0,0],c=china.daily.get(day)||[0,0,0,0],sessions=Math.max(0,x.sessions-a[0]-c[0]),users=Math.max(0,x.users-a[1]-c[1]),views=Math.max(0,x.views-a[2]-c[2]),duration=sessions?Math.max(0,(rawDuration*x.sessions-a[3]-c[3])/sessions):0;return{...x,sessions,users,views,duration,excludedSessions:a[0]+c[0]}})}
   function filledRows(key,from,to){const map=new Map(rows(key,from,to).map(x=>[x.date,x]));return rangeDates(from,to).map(date=>map.get(date)||{date,sessions:0,users:0,views:0,duration:0})}
   function total(key,metric){return rows(key).reduce((a,x)=>a+(x[metric]||0),0)}
-  function contentPages(key,from=state.start,to=state.end){
-    const root=D.content?.[key];
-    if(!root)return NaN;
-    const start=Math.round((Date.parse(from+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(to+"T00:00:00Z")-base)/86400000);
-    let n=0,has=false;
-    for(const type of ["product","recipe"]){
-      const recs=root[type]?.records;
-      if(!recs)continue;
-      has=true;
-      recs.forEach(r=>{if(r[0]>=start&&r[0]<=end)n+=r[2]});
-    }
-    return has?n:NaN;
-  }
-  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN,pages=contentPages(key,from,to);return{data,sessions,users,views,rate:sessions?views/sessions:NaN,pages,pageRate:sessions&&Number.isFinite(pages)?pages/sessions:NaN,duration}}
+  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;return{data,sessions,users,views,rate:sessions?views/sessions:NaN,duration}}
   function setPreset(value){
     let start=state.start,end=D.dataEnd;
     if(/^\d+$/.test(value))start=iso(shift(latest,-(+value-1)));
@@ -203,20 +193,65 @@
     records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=labels[r[1]];if(date<from||date>to||(bad&&bad.has(label)))return;const n=Math.max(0,r[2]-(adjust?adjust(r[0],label):0));if(n)m.set(label,(m.get(label)||0)+n)});
     return m;
   }
+  function genericDriver(s){
+    const t=String(s??"").trim().toLowerCase().replace(/\s+/g," ");
+    return !t||t==="not set"||t==="direct"||t==="none"||/^\([^)]+\)(\s*\/\s*\([^)]+\))*$/.test(t);
+  }
   function pickLabel(mapA,mapB,daysA,daysB,wantUp){
-    const vague=s=>{const t=String(s??"").trim().toLowerCase();return!t||t==="(not set)"||t==="not set"},choose=(allowVague)=>{let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{if(!allowVague&&vague(label))return;const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});return best};
+    const choose=(allowVague)=>{let best=null;new Set([...mapA.keys(),...mapB.keys()]).forEach(label=>{if(!allowVague&&genericDriver(label))return;const delta=(mapB.get(label)||0)/daysB-(mapA.get(label)||0)/daysA;if(!best||(wantUp?delta>best.delta:delta<best.delta))best={label,delta}});return best};
     return choose(false)||choose(true);
   }
-  function driverDetail(keyA,startA,endA,keyB,startB,endB,wantUp){
-    if(state.metric==="duration")return"";
+  function driverPicks(keyA,startA,endA,keyB,startB,endB,wantUp){
+    if(state.metric==="duration")return null;
     const driverA=window.GA4_DRIVER_COMPLETE?.[keyA],driverB=window.GA4_DRIVER_COMPLETE?.[keyB],sourceA=window.GA4_SOURCE_DATA?.[keyA],sourceB=window.GA4_SOURCE_DATA?.[keyB];
-    if(!driverA||!driverB||!sourceA||!sourceB)return"";
+    if(!driverA||!driverB||!sourceA||!sourceB)return null;
     const bad=new Set([...sourceProfile(keyA,startA,endA).bad,...sourceProfile(keyB,startB,endB).bad]),daysA=Math.max(1,dayCount(startA,endA)),daysB=Math.max(1,dayCount(startB,endB));
     const adjA=chinaAdjust(keyA,startA,endA),adjB=chinaAdjust(keyB,startB,endB);
     const names=["Source / medium","Campaign","Country","Device"],sets=[[sourceA.records,sourceA.sources,sourceB.records,sourceB.sources,true,null],[driverA.campaign.records,driverA.campaign.labels,driverB.campaign.records,driverB.campaign.labels,false,null],[driverA.country.records,driverA.country.labels,driverB.country.records,driverB.country.labels,false,true],[driverA.device.records,driverA.device.labels,driverB.device.records,driverB.device.labels,false,true]];
     const picks=sets.map(([recA,labA,recB,labB,filterBad,useChina])=>pickLabel(sumByLabel(recA,labA,startA,endA,filterBad?bad:null,useChina?adjA:null),sumByLabel(recB,labB,startB,endB,filterBad?bad:null,useChina?adjB:null),daysA,daysB,wantUp));
-    if(!picks.every(Boolean))return"";
-    return" <strong>"+(wantUp?"Increased most":"Decreased most")+":</strong> "+picks.map((p,i)=>names[i]+" — "+esc(p.label)).join(" · ")+".";
+    if(!picks.every(Boolean))return null;
+    return picks.map((p,i)=>({name:names[i],label:p.label}));
+  }
+  function driverObservation(picks,wantUp){
+    if(!picks)return"";
+    return" <strong>"+(wantUp?"Increased most":"Decreased most")+":</strong> "+picks.map(p=>p.name+" — "+esc(p.label)).join(" · ")+".";
+  }
+  function namedDriver(picks,name){
+    const p=picks?.find(x=>x.name===name);
+    return p&&!genericDriver(p.label)?p.label:"";
+  }
+  function driverActions(picks,wantUp){
+    if(!picks&&state.metric==="duration"){
+      return wantUp
+        ?["Review pages that held attention longer and replicate that content on weaker URLs.","Compare Session mix donuts to see whether the time-on-site lift is concentrated in a channel worth scaling."]
+        :["Check landing-page quality and load time where visits continue but time on site fell.","Protect channels that still hold engagement so the decline does not spread."];
+    }
+    const items=[],source=namedDriver(picks,"Source / medium"),campaign=namedDriver(picks,"Campaign");
+    const country=picks?.find(x=>x.name==="Country")?.label||"",device=picks?.find(x=>x.name==="Device")?.label||"";
+    const china=/\bchina\b/i.test(country),desktop=/^desktop$/i.test(device);
+    if(wantUp){
+      if(source)items.push("Investigate the lift from <strong>"+esc(source)+"</strong> — confirm landing pages, tracking, and media delivery can sustain it.");
+      else items.push("Use the Session mix donuts to find a named source / medium behind the lift, rather than unassigned or direct traffic.");
+      if(campaign)items.push("Double down on the <strong>"+esc(campaign)+"</strong> campaign if results look sustainable.");
+      if(china||desktop)items.push("Review whether "+(china?"China":esc(country))+(desktop?" on desktop":"")+" needs more local content or a bot-like traffic check (see Remarks).");
+    }else{
+      const named=[source&&("<strong>"+esc(source)+"</strong>"),campaign&&("<strong>"+esc(campaign)+"</strong>")].filter(Boolean);
+      if(named.length)items.push("Diagnose the drop on "+named.join(" and ")+" — check tracking, landing-page health, and media delivery.");
+      else items.push("Use the Session mix donuts to isolate which named channel lost volume.");
+      items.push("Protect remaining channels that held volume so the decline does not spread.");
+      if(china)items.push("Check China traffic quality against the bot-like rules in Remarks before treating the drop as a demand loss.");
+    }
+    return items;
+  }
+  function twoDomainActions(domain,compareDomain,ahead){
+    const lead=ahead?domain.label:compareDomain.label,trail=ahead?compareDomain.label:domain.label;
+    return[
+      "Study <strong>"+esc(lead)+"</strong>'s Session mix donuts and Top 5 products and recipes to see which channels and content explain the lead.",
+      "Use those patterns to plan acquisition and content for <strong>"+esc(trail)+"</strong> and close the gap."
+    ];
+  }
+  function insightHtml(observation,actions){
+    return'<div class="insight-part"><h4 class="insight-part-label">Observation(s)</h4><p class="insight-part-body">'+observation+'</p></div><div class="insight-part"><h4 class="insight-part-label">Action Item(s)</h4><ul class="insight-actions">'+actions.map(a=>"<li>"+a+"</li>").join("")+"</ul></div>";
   }
   function setKpi(id,noteId,value,formatter,compareValue,compareDomain,defaultNote){$(id).textContent=formatter(value);const note=$(noteId);if(!compareDomain){note.textContent=defaultNote;return}const delta=Number.isFinite(compareValue)&&compareValue!==0?(value-compareValue)/compareValue*100:NaN;const pct=Number.isFinite(delta)?(delta>=0?"+":"")+delta.toFixed(1)+"%":"",tone=Number.isFinite(delta)?(delta>0?"up":delta<0?"down":""):"";note.innerHTML="vs "+esc(compareDomain.label)+": "+formatter(compareValue)+(pct?" · <span class=\"delta"+(tone?" "+tone:"")+"\">"+pct+"</span>":"")}
   function render(){
@@ -230,14 +265,12 @@
       $("#compare").disabled=true;$("#period-compare").disabled=true;
       $("#compare").title="";$("#period-compare").title="";
       $("#chart-title").textContent="Traffic trend";
-      $("#chart-sub").textContent="Select a domain to view performance for the selected period";
       $("#legend").innerHTML="";
-      $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-pages").textContent=$("#kpi-duration").textContent="—";
+      $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-duration").textContent="—";
       $("#note-sessions").textContent="Total in selected period";
       $("#note-users").textContent="Avoids double-counting users";
       $("#note-views").textContent="Total in selected period";
-      $("#note-rate").textContent="Content depth indicator";
-      $("#note-pages").textContent="Page views per session";
+      $("#note-rate").textContent="Page views per session";
       $("#note-duration").textContent="Average session duration";
       $("#chart").innerHTML='<text x="500" y="160" text-anchor="middle" class="axistext">Select a domain to view traffic</text>';
       $("#insight").textContent="";
@@ -253,22 +286,18 @@
     $("#period-compare").title=compareDomain?"Unavailable while comparing another domain":"";
     if(compareDomain){
       $("#chart-title").textContent=domain.label+" vs "+compareDomain.label;
-      $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" by day · comparison enabled";
       $("#legend").innerHTML='<span><i></i>'+esc(domain.label)+'</span><span><i class="compare"></i>'+esc(compareDomain.label)+'</span>';
     }else if(period){
       $("#chart-title").textContent=domain.label+" vs "+period.label;
-      $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" aligned by day in range";
       $("#legend").innerHTML='<span><i></i>'+dateFmt(state.start)+" – "+dateFmt(state.end)+" "+state.start.slice(0,4)+'</span><span><i class="compare"></i>'+dateFmt(period.start)+" – "+dateFmt(period.end)+" "+period.start.slice(0,4)+'</span>';
     }else{
       $("#chart-title").textContent=domain.label+" traffic";
-      $("#chart-sub").textContent=domain.host+" · "+labels[state.metric]+" by day";
       $("#legend").innerHTML="";
     }
     setKpi("#kpi-sessions","#note-sessions",primary.sessions,fmt,comparison?.sessions,kpiCompare,"Total in selected period");
     setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"Avoids double-counting users");
     setKpi("#kpi-views","#note-views",primary.views,fmt,comparison?.views,kpiCompare,"Total in selected period");
-    setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Content depth indicator");
-    setKpi("#kpi-pages","#note-pages",primary.pageRate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.pageRate,kpiCompare,"Page views per session");
+    setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Page views per session");
     setKpi("#kpi-duration","#note-duration",primary.duration,durationFmt,comparison?.duration,kpiCompare,"Average session duration");
     if(period){
       const primaryPlot=filledRows(state.host,state.start,state.end),compareFilled=filledRows(state.host,period.start,period.end);
@@ -299,19 +328,34 @@
   function renderInsight(primary,domain,comparison,compareDomain,period){
     if(period){
       const hasData=comparison&&comparison.data&&comparison.data.length;
-      if(!hasData){$("#insight").innerHTML="<strong>Period comparison:</strong> No data is available for the "+esc(period.label)+" ("+longDate(period.start)+" – "+longDate(period.end)+").";return}
-      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,detail=Number.isFinite(pct)?driverDetail(state.host,period.start,period.end,state.host,state.start,state.end,pct>=0):"";
-      $("#insight").innerHTML="<strong>Period comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+")."+detail;
+      if(!hasData){
+        $("#insight").innerHTML=insightHtml("No data is available for the "+esc(period.label)+" ("+longDate(period.start)+" – "+longDate(period.end)+").",["Choose a comparison period inside the snapshot window, or confirm the GA4 export covers those dates (see Remarks)."]);
+        return;
+      }
+      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,wantUp=Number.isFinite(pct)?pct>=0:true;
+      const picks=Number.isFinite(pct)?driverPicks(state.host,period.start,period.end,state.host,state.start,state.end,wantUp):null;
+      const metric=labels[state.metric].toLowerCase();
+      const observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+metric+" than the "+esc(period.label)+" ("+dateFmt(period.start)+" – "+dateFmt(period.end)+")."+driverObservation(picks,wantUp);
+      const actions=Number.isFinite(pct)?driverActions(picks,wantUp):["Confirm both periods have complete tracking, then compare Session mix and Top 5 content once a percentage is available."];
+      $("#insight").innerHTML=insightHtml(observation,actions);
       return;
     }
     if(compareDomain){
-      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN,detail=Number.isFinite(pct)?driverDetail(keyOf(compareDomain),state.start,state.end,state.host,state.start,state.end,pct>=0):"";
-      $("#insight").innerHTML="<strong>Comparison:</strong> "+esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period."+detail;
+      const a=metricValue(primary),b=metricValue(comparison),pct=b?(a-b)/b*100:NaN;
+      const observation=esc(domain.label)+" has "+(Number.isFinite(pct)?'<strong>'+Math.abs(pct).toFixed(1)+'%</strong> '+(pct>=0?"more":"less"):"no comparable")+" "+labels[state.metric].toLowerCase()+" than "+esc(compareDomain.label)+" for this period.";
+      const actions=Number.isFinite(pct)?twoDomainActions(domain,compareDomain,pct>=0):["Confirm tracking is complete for both markets, then compare Session mix donuts and Top 5 products and recipes once both sides have data."];
+      $("#insight").innerHTML=insightHtml(observation,actions);
       return;
     }
-    const data=primary.data;if(data.length<4){$("#insight").textContent="Not enough data is available for a trend observation.";return}
-    const half=Math.floor(data.length/2),a=data.slice(0,half).reduce((n,x)=>n+x[state.metric],0)/half,b=data.slice(half).reduce((n,x)=>n+x[state.metric],0)/(data.length-half),pct=a?((b-a)/a*100):0,word=pct>=0?"up":"down",cutoff=iso(shift(new Date(data[half].date+"T12:00:00"),-1)),detail=driverDetail(state.host,state.start,cutoff,state.host,data[half].date,state.end,pct>=0);
-    $("#insight").innerHTML="<strong>"+esc(domain.label)+" signal:</strong> Average daily "+labels[state.metric].toLowerCase()+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+detail;
+    const data=primary.data;
+    if(data.length<4){
+      $("#insight").innerHTML=insightHtml("Not enough data is available for a trend observation.",["Widen the date range so at least four days are available before reading a trend."]);
+      return;
+    }
+    const half=Math.floor(data.length/2),a=data.slice(0,half).reduce((n,x)=>n+x[state.metric],0)/half,b=data.slice(half).reduce((n,x)=>n+x[state.metric],0)/(data.length-half),pct=a?((b-a)/a*100):0,word=pct>=0?"up":"down",cutoff=iso(shift(new Date(data[half].date+"T12:00:00"),-1));
+    const picks=driverPicks(state.host,state.start,cutoff,state.host,data[half].date,state.end,pct>=0);
+    const observation="Average daily "+labels[state.metric].toLowerCase()+" for "+esc(domain.label)+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+driverObservation(picks,pct>=0);
+    $("#insight").innerHTML=insightHtml(observation,driverActions(picks,pct>=0));
   }
   function contentRanks(key,type){
     const c=D.content[key]?.[type];if(!c)return null;
@@ -359,6 +403,8 @@
   }
   function renderDonuts(domain){
     $("#donuts").hidden=false;
+    $("#donuts-title").textContent="Session mix · "+domain.label;
+    $("#donuts-sub").textContent=domain.host+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
     const key=keyOf(domain),source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad,adj=chinaAdjust(key,state.start,state.end);
     $("#donut-source").innerHTML=donutMarkup(topSlices(sumByLabel(source?.records,source?.sources,state.start,state.end,bad)));
     $("#donut-country").innerHTML=donutMarkup(topSlices(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end,null,adj)));
@@ -368,12 +414,12 @@
     $("#focus-content").hidden=false;
     $("#focus-title").textContent="Top 5 products and recipes";
     $("#focus-sub").textContent=domain.label+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
-    $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),false,true);
+    $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true);
     $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true);
   }
   function renderContent(){
     const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"sessions")})).sort((a,b)=>b.value-a.value).slice(0,5);
-    $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,false)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
+    $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,true)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
   }
   $("#domain").addEventListener("change",e=>{state.host=e.target.value;if(state.compare===state.host){state.compare="";$("#compare").value=""}render()});
   $("#compare").addEventListener("change",e=>{state.compare=e.target.value===state.host?"":e.target.value;if(!state.compare)e.target.value="";if(state.compare){state.periodCompare="";$("#period-compare").value=""}render()});
