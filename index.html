@@ -109,12 +109,12 @@
       <h2>Remarks</h2>
       <ol>
         <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
-        <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, Top 5 markets, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut. Session mix Source / medium uses remaining page views; Demographic and Device stay on sessions because those dumps do not include views. Product and recipe lists also use sessions for the same reason.</li>
+        <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, Top 5 markets, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut. Session mix donuts use remaining page views. Demographic and Device allocate remaining page views by remaining session share when the snapshot has no views split. Product and recipe lists use page views (sessions converted with that day’s views per session when the snapshot has no views split).</li>
         <li>Page views / session is page views ÷ sessions after those filters.</li>
         <li>A domain must be selected before any data is shown. Selecting <strong>Total</strong> sums every domain after those filters.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions.</li>
-        <li>Top 5 markets and What visitors are viewing show the five markets with the most remaining sessions.</li>
+        <li>Top 5 markets shows the five markets with the most remaining sessions. What visitors are viewing shows the five markets with the most remaining page views.</li>
       </ol>
     </div>
   </footer>
@@ -221,9 +221,15 @@
   }
   function syncDates(){$("#start-date").value=state.start;$("#end-date").value=state.end}
   function metricValue(s){return s[state.metric]}
-  function sumByLabel(records,labels,from,to,bad,adjust,metricIdx=2){
+  function viewsIdx(records){const rec=records&&records[0];return rec&&rec.length>=5?4:2}
+  function dayViewFactors(key,from,to){
+    const m=new Map();
+    rows(key,from,to).forEach(x=>{const day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000);m.set(day,x.sessions?x.views/x.sessions:0)});
+    return m;
+  }
+  function sumByLabel(records,labels,from,to,bad,adjust,metricIdx=2,factors){
     const m=new Map();if(!records||!labels)return m;
-    records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=labels[r[1]];if(date<from||date>to||(bad&&bad.has(label)))return;const raw=Number(r[metricIdx]??r[2])||0,n=Math.max(0,raw-(adjust?adjust(r[0],label):0));if(n)m.set(label,(m.get(label)||0)+n)});
+    records.forEach(r=>{const date=new Date(base+r[0]*86400000).toISOString().slice(0,10),label=labels[r[1]];if(date<from||date>to||(bad&&bad.has(label)))return;const raw=Number(r[metricIdx]??r[2])||0;let n=Math.max(0,raw-(adjust?adjust(r[0],label):0));if(factors)n*=factors.get(r[0])||0;if(n)m.set(label,(m.get(label)||0)+n)});
     return m;
   }
   function genericDriver(s){
@@ -492,16 +498,13 @@
     const observation="Average daily "+labels[state.metric].toLowerCase()+" for "+esc(domain.label)+" are "+word+" <strong>"+Math.abs(pct).toFixed(1)+"%</strong> in the latter half of this period."+driverObservation(picks,pct>=0);
     $("#insight").innerHTML=insightHtml(observation,driverActions(picks,pct>=0));
   }
-  function contentValue(r){return Number(r.length>=5?r[4]:r[2])||0}
-  const contentUnit=(function(){
-    for(const k of Object.keys(D.content||{})){
-      for(const t of ["product","recipe"]){
-        const rec=D.content[k]?.[t]?.records?.[0];
-        if(rec&&rec.length>=5)return"page views";
-      }
-    }
-    return"sessions";
-  })();
+  const contentUnit="page views",contentFactorCache=new Map();
+  function contentFactors(key){
+    let m=contentFactorCache.get(key);if(m)return m;
+    m=new Map();(D.series[key]||[]).forEach(x=>{const day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000);m.set(day,x.sessions?x.views/x.sessions:0)});
+    contentFactorCache.set(key,m);return m;
+  }
+  function contentValue(r,key){return r.length>=5?Number(r[4])||0:(Number(r[2])||0)*(contentFactors(key).get(r[0])||0)}
   function contentRanks(key,type){
     const start=Math.round((Date.parse(state.start+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(state.end+"T00:00:00Z")-base)/86400000);
     if(isTotal(key)){
@@ -510,7 +513,7 @@
         const c=D.content[k]?.[type],domain=resolveDomain(k);if(!c||!domain)return;matched=true;
         c.records.forEach(r=>{
           if(r[0]<start||r[0]>end)return;
-          const title=c.paths[r[1]][1],id=title+"\0"+k,prev=totals.get(id)||{title,market:domain.label,value:0},n=contentValue(r);
+          const title=c.paths[r[1]][1],id=title+"\0"+k,prev=totals.get(id)||{title,market:domain.label,value:0},n=contentValue(r,k);
           prev.value+=n;totals.set(id,prev);grand+=n;
         });
       });
@@ -520,7 +523,7 @@
     }
     const c=D.content[key]?.[type];if(!c)return null;
     const totals=new Map();
-    c.records.forEach(r=>{if(r[0]>=start&&r[0]<=end)totals.set(r[1],(totals.get(r[1])||0)+contentValue(r))});
+    c.records.forEach(r=>{if(r[0]>=start&&r[0]<=end)totals.set(r[1],(totals.get(r[1])||0)+contentValue(r,key))});
     const total=[...totals.values()].reduce((n,v)=>n+v,0),items=[...totals].map(([i,value])=>({title:c.paths[i][1],value,pct:total?value/total*100:0})).sort((a,b)=>b.value-a.value).slice(0,5);
     return{total,items};
   }
@@ -573,10 +576,16 @@
     $("#donuts-sub").textContent=(isTotal(keyOf(domain))?"all domains":domain.host)+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
     const keys=isTotal(keyOf(domain))?domainKeys():[keyOf(domain)];
     const sourceMaps=[],countryMaps=[],deviceMaps=[];
-    keys.forEach(key=>{const source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad,adj=chinaAdjust(key,state.start,state.end);sourceMaps.push(sumByLabel(source?.records,source?.sources,state.start,state.end,bad,null,4));countryMaps.push(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end,null,adj));deviceMaps.push(sumByLabel(driver?.device?.records,driver?.device?.labels,state.start,state.end,null,adj))});
+    keys.forEach(key=>{
+      const source=window.GA4_SOURCE_DATA?.[key],driver=window.GA4_DRIVER_COMPLETE?.[key],bad=sourceProfile(key,state.start,state.end).bad;
+      const countryIdx=viewsIdx(driver?.country?.records),deviceIdx=viewsIdx(driver?.device?.records),factors=dayViewFactors(key,state.start,state.end);
+      sourceMaps.push(sumByLabel(source?.records,source?.sources,state.start,state.end,bad,null,4));
+      countryMaps.push(sumByLabel(driver?.country?.records,driver?.country?.labels,state.start,state.end,null,chinaAdjust(key,state.start,state.end,countryIdx===4?2:0),countryIdx,countryIdx===4?null:factors));
+      deviceMaps.push(sumByLabel(driver?.device?.records,driver?.device?.labels,state.start,state.end,null,chinaAdjust(key,state.start,state.end,deviceIdx===4?2:0),deviceIdx,deviceIdx===4?null:factors));
+    });
     $("#donut-source").innerHTML=donutMarkup(slicePlan(mergeMaps(sourceMaps)),"source","page views");
-    $("#donut-country").innerHTML=donutMarkup(slicePlan(mergeMaps(countryMaps)),"country","sessions");
-    $("#donut-device").innerHTML=donutMarkup(slicePlan(mergeMaps(deviceMaps)),"device","sessions");
+    $("#donut-country").innerHTML=donutMarkup(slicePlan(mergeMaps(countryMaps)),"country","page views");
+    $("#donut-device").innerHTML=donutMarkup(slicePlan(mergeMaps(deviceMaps)),"device","page views");
   }
   function renderFocusContent(domain){
     $("#focus-content").hidden=false;
@@ -587,7 +596,7 @@
     $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true,showMarket);
   }
   function renderContent(){
-    const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"sessions")})).sort((a,b)=>b.value-a.value).slice(0,5);
+    const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"views")})).sort((a,b)=>b.value-a.value).slice(0,5);
     $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,true)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
   }
   $("#domain").addEventListener("change",e=>{state.host=e.target.value;syncCompareTotalOption();render()});
