@@ -1,4 +1,4 @@
-# Lee Kum Kee GA4 Dashboard
+# Lee Kum Kee Website Performance
 
 Public static GA4 dashboard for Lee Kum Kee website performance.
 
