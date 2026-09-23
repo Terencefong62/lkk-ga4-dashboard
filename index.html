@@ -34,7 +34,7 @@
     .donut-swatch{width:8px;height:8px;border-radius:50%;margin-top:4px;flex:0 0 8px}
     .donut-label{color:var(--ink);min-width:0;overflow-wrap:anywhere}.donut-pct{color:var(--muted);white-space:nowrap;font-weight:650}
     .donut-empty{color:var(--muted);font-size:12px;padding:22px 6px;text-align:center;width:100%}
-    .donut-center{fill:var(--ink);font-size:13px;font-weight:730;font-family:Inter,ui-sans-serif,sans-serif}.donut-center-sub{fill:#8c8884;font-size:6.5px;font-family:Inter,ui-sans-serif,sans-serif}
+    .donut-center{fill:var(--ink);font-size:12px;font-weight:730;font-family:Inter,ui-sans-serif,sans-serif}.donut-center-sub{fill:#8c8884;font-size:5.8px;font-family:Inter,ui-sans-serif,sans-serif}
     .donut-legend .donut-extra .donut-label{color:#625e5b}
     .donut-legend .donut-toggle-row{grid-template-columns:8px minmax(0,1fr);gap:7px}
     .donut-more{margin:0;padding:0;border:0;background:none;color:#315b8a;font:inherit;font-size:12px;font-weight:650;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px}
@@ -71,7 +71,7 @@
       <div class="panel-head"><div><h2 id="chart-title">Traffic trend</h2></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
       <div class="kpis">
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div></div>
-        <div class="kpi"><div class="kpi-label">Avg. daily active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Avoids double-counting users</div></div>
+        <div class="kpi"><div class="kpi-label">Active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Sum of daily active users</div></div>
         <div class="kpi"><div class="kpi-label">Page views</div><div class="kpi-value" id="kpi-views">—</div><div class="kpi-note" id="note-views">Total in selected period</div></div>
         <div class="kpi"><div class="kpi-label">Page views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Average time on site</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-note" id="note-duration">Average session duration</div></div>
@@ -131,6 +131,7 @@
         <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
         <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, Top 5 markets, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut. Session mix donuts use remaining page views. Demographic and Device allocate remaining page views by remaining session share when the snapshot has no views split. Product and recipe lists use page views (sessions converted with that day’s views per session when the snapshot has no views split).</li>
         <li>Page views / session is page views ÷ sessions after those filters.</li>
+        <li>Active users is the sum of daily active users in the snapshot after those filters. It is not a de-duplicated unique-user count for the whole period.</li>
         <li>A domain must be selected before any data is shown. Selecting <strong>Total</strong> sums every domain after those filters.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions.</li>
@@ -227,7 +228,7 @@
   }
   function filledRows(key,from,to){const map=new Map(rows(key,from,to).map(x=>[x.date,x]));return rangeDates(from,to).map(date=>map.get(date)||{date,sessions:0,users:0,views:0,duration:0})}
   function total(key,metric){return rows(key).reduce((a,x)=>a+(x[metric]||0),0)}
-  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.length?data.reduce((n,x)=>n+x.users,0)/data.length:0,durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;return{data,sessions,users,views,rate:sessions?views/sessions:NaN,duration}}
+  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.reduce((n,x)=>n+(x.users||0),0),durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;return{data,sessions,users,views,rate:sessions?views/sessions:NaN,duration}}
   function setPreset(value){
     if(!value||value==="custom"){
       state.start="";state.end="";
@@ -407,7 +408,7 @@
       $("#legend").innerHTML="";
       $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-duration").textContent="—";
       $("#note-sessions").textContent="Total in selected period";
-      $("#note-users").textContent="Avoids double-counting users";
+      $("#note-users").textContent="Sum of daily active users";
       $("#note-views").textContent="Total in selected period";
       $("#note-rate").textContent="Page views per session";
       $("#note-duration").textContent="Average session duration";
@@ -438,7 +439,7 @@
       $("#legend").innerHTML="";
     }
     setKpi("#kpi-sessions","#note-sessions",primary.sessions,fmt,comparison?.sessions,kpiCompare,"Total in selected period");
-    setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"Avoids double-counting users");
+    setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"Sum of daily active users");
     setKpi("#kpi-views","#note-views",primary.views,fmt,comparison?.views,kpiCompare,"Total in selected period");
     setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Page views per session");
     setKpi("#kpi-duration","#note-duration",primary.duration,durationFmt,comparison?.duration,kpiCompare,"Average session duration");
@@ -626,6 +627,26 @@
     const large=sweep>180?1:0,[ox0,oy0]=polar(cx,cy,rOut,a0),[ox1,oy1]=polar(cx,cy,rOut,a1),[ix1,iy1]=polar(cx,cy,rIn,a1),[ix0,iy0]=polar(cx,cy,rIn,a0);
     return'<path fill="'+color+'" d="M'+ox0.toFixed(2)+","+oy0.toFixed(2)+" A"+rOut+","+rOut+" 0 "+large+" 1 "+ox1.toFixed(2)+","+oy1.toFixed(2)+" L"+ix1.toFixed(2)+","+iy1.toFixed(2)+" A"+rIn+","+rIn+" 0 "+large+" 0 "+ix0.toFixed(2)+","+iy0.toFixed(2)+' Z"/>';
   }
+  function sharePercents(values){
+    const raw=values.map(v=>Math.max(0,Number(v)||0)),total=raw.reduce((n,v)=>n+v,0);
+    if(!total)return raw.map(()=>"—");
+    const scaled=raw.map(v=>v/total*1000),floors=scaled.map(s=>Math.floor(s+1e-8));
+    let left=1000-floors.reduce((n,v)=>n+v,0);
+    if(left<0){
+      const order=scaled.map((s,i)=>({i,frac:s-floors[i]})).sort((a,b)=>a.frac-b.frac||b.i-a.i);
+      for(let k=0;k<-left;k++)if(floors[order[k].i]>0)floors[order[k].i]--;
+    }else{
+      const order=scaled.map((s,i)=>({i,frac:s-floors[i]})).sort((a,b)=>b.frac-a.frac||a.i-b.i);
+      for(let k=0;k<left;k++)floors[order[k].i]++;
+    }
+    return floors.map(t=>t>=100&&t%10===0?(t/10).toFixed(0)+"%":(t/10).toFixed(1)+"%");
+  }
+  function clipLabel(s,max){s=String(s??"").trim();return s.length<=max?s:s.slice(0,max-1)+"…"}
+  function donutLabelLines(label){
+    const s=String(label??"").trim(),parts=s.split(" / ");
+    if(parts.length>=2)return[clipLabel(parts[0],14),clipLabel(parts.slice(1).join(" / "),14)];
+    return[clipLabel(s,16)];
+  }
   function donutMarkup(plan,id,unit){
     const expanded=!!donutExpanded[id],donutSlices=plan.top.slice();
     if(plan.other>0)donutSlices.push({label:"Other",value:plan.other,other:true});
@@ -634,13 +655,15 @@
     const gap=donutSlices.length>1?1.6:0,span=360-gap*donutSlices.length;
     let start=0;
     const paths=donutSlices.map((s,i)=>{const color=s.other?DONUT_OTHER:DONUT_COLORS[i%DONUT_COLORS.length],sweep=s.value/total*span,d=donutSlice(50,50,26,42,start,start+sweep,color);start+=sweep+gap;return d}).join("");
-    const lead=donutSlices[0],leadPct=lead.value/total*100,leadTxt=leadPct>=10?leadPct.toFixed(0):leadPct.toFixed(1);
-    const svg='<svg viewBox="0 0 100 100" role="img" aria-label="Share of '+unit+'"><g>'+paths+'</g><text class="donut-center" x="50" y="49.5" text-anchor="middle">'+leadTxt+'%</text><text class="donut-center-sub" x="50" y="60" text-anchor="middle">of '+unit+'</text></svg>';
     const legendSlices=expanded?[...plan.top,...plan.more,...(plan.otherAfterMore>0?[{label:"Other",value:plan.otherAfterMore,other:true}]:[])]:donutSlices;
+    const pcts=sharePercents(legendSlices.map(s=>s.value));
+    const lead=legendSlices[0],leadTxt=pcts[0],lines=donutLabelLines(lead.label),two=lines.length>1;
+    const sub=lines.map((line,i)=>'<tspan x="50" y="'+(two?54+i*8:59)+'">'+esc(line)+'</tspan>').join("");
+    const svg='<svg viewBox="0 0 100 100" role="img" aria-label="'+esc(lead.label)+' '+leadTxt+' of '+unit+'"><g>'+paths+'</g><text class="donut-center" x="50" y="'+(two?43.5:46)+'" text-anchor="middle">'+leadTxt+'</text><text class="donut-center-sub" text-anchor="middle">'+sub+'</text></svg>';
     let extraI=0;
     const items=legendSlices.map((s,i)=>{
-      const extra=!!s.extra,color=s.other?DONUT_OTHER:extra?DONUT_EXTRA[extraI++%DONUT_EXTRA.length]:DONUT_COLORS[i%DONUT_COLORS.length],p=s.value/total*100,pTxt=(p>=10?p.toFixed(0):p.toFixed(1))+"%";
-      return'<li'+(extra?' class="donut-extra"':'')+' title="'+esc(s.label)+' · '+fmt(s.value)+' '+unit+'"><span class="donut-swatch" style="background:'+color+'"></span><span class="donut-label">'+esc(s.label)+'</span><span class="donut-pct">'+pTxt+'</span></li>';
+      const extra=!!s.extra,color=s.other?DONUT_OTHER:extra?DONUT_EXTRA[extraI++%DONUT_EXTRA.length]:DONUT_COLORS[i%DONUT_COLORS.length];
+      return'<li'+(extra?' class="donut-extra"':'')+' title="'+esc(s.label)+' · '+fmt(s.value)+' '+unit+'"><span class="donut-swatch" style="background:'+color+'"></span><span class="donut-label">'+esc(s.label)+'</span><span class="donut-pct">'+pcts[i]+'</span></li>';
     }).join("");
     const toggle=plan.more.length?'<li class="donut-toggle-row"><span></span><button type="button" class="donut-more" data-donut-toggle="'+id+'" aria-expanded="'+(expanded?"true":"false")+'" aria-label="'+(expanded?"Hide ranks 6 to 10":"Show ranks 6 to 10")+'">'+(expanded?"See less":"See more")+'</button></li>':'';
     return svg+'<ul class="donut-legend">'+items+toggle+"</ul>";
