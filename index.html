@@ -16,7 +16,7 @@
     .type-buttons button:focus-visible,.rank-head:focus-visible{outline:3px solid #f19ba1;outline-offset:2px}
     .grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(310px,.9fr);gap:18px;margin-top:18px}.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
     .main{padding:22px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.panel h2{font-family:Georgia,serif;font-size:22px;margin:0 0 5px;font-weight:600}.sub{color:var(--muted);font-size:13px}
-    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px;min-width:0;display:flex;flex-direction:column}.kpi-label{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:25px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta,.kpi-avg .delta{font-weight:700}.kpi-note .delta.up,.kpi-avg .delta.up{color:var(--green)}.kpi-note .delta.down,.kpi-avg .delta.down{color:var(--red)}.kpi-avg{font-size:11px;color:#625e5b;margin-top:auto;padding-top:7px;border-top:1px solid #e4e0d9;line-height:1.35;overflow-wrap:anywhere}.kpi-avg-value{font-weight:730;color:var(--ink)}
+    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px;min-width:0;display:flex;flex-direction:column}.kpi-label{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:25px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta,.kpi-avg .delta{font-weight:700}.kpi-note .delta.up,.kpi-avg .delta.up{color:var(--green)}.kpi-note .delta.down,.kpi-avg .delta.down{color:var(--red)}.kpi-avg{font-size:11px;color:#625e5b;margin-top:auto;padding-top:7px;border-top:1px solid #e4e0d9;line-height:1.35;overflow-wrap:anywhere}.kpi-avg-value{font-weight:730;color:var(--ink)}.kpi-split{font-size:11px;color:#625e5b;margin-top:4px;line-height:1.35;overflow-wrap:anywhere}.kpi-split-value{font-weight:730;color:var(--ink)}
     .chart-toolbar{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px 12px;margin:0 0 10px}.chart-type-label{font-size:12px;color:var(--muted);font-weight:650}.type-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;min-width:min(100%,216px);background:#f8f7f4;border:1px solid #ece9e3;border-radius:10px;padding:3px}.type-buttons button{border:0;border-radius:7px;padding:7px 10px;background:transparent;color:var(--muted);cursor:pointer;font-weight:650}.type-buttons button.active{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(25,20,18,.08)}
     .chart-wrap{position:relative;min-height:315px}.chart{width:100%;height:auto;display:block;overflow:visible}.gridline{stroke:#ebe8e2;stroke-width:1}.axistext{fill:#8c8884;font-size:11px}.axistext.compare{fill:#315b8a}.chartline,.compareline{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.compareline{stroke:#315b8a;stroke-width:2.5;stroke-dasharray:8 6}.areafill{fill:url(#area)}.bar{fill:var(--red);opacity:.9}.comparebar{fill:#315b8a;opacity:.85}.point{fill:#fff;stroke:var(--red);stroke-width:2}.comparepoint{fill:#fff;stroke:#315b8a;stroke-width:2}.tooltip{position:absolute;pointer-events:none;background:#151515;color:#fff;padding:9px 11px;border-radius:9px;font-size:12px;box-shadow:0 8px 30px #0003;opacity:0;transform:translate(-50%,-115%);white-space:nowrap;transition:opacity .1s}.legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:3px;border-radius:3px;background:var(--red)}.legend i.compare{background:#315b8a}
     .insights{margin:0 0 18px}.insights:has(#insight:empty){display:none}.insights-label{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 8px}.insight{border-left:3px solid var(--red);background:var(--soft);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}.insight-part+.insight-part{margin-top:10px;padding-top:10px;border-top:1px solid #ecd4d4}.insight-part-label{font-family:Georgia,serif;font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 5px}.insight-part-body{margin:0}.insight-actions{margin:0;padding-left:1.2em}.insight-actions li+li{margin-top:5px}
@@ -71,7 +71,7 @@
       <div class="panel-head"><div><h2 id="chart-title">Traffic trend · Sessions</h2></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
       <div class="kpis">
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div><div class="kpi-avg" id="avg-sessions" title="Average daily sessions">Avg. daily —</div></div>
-        <div class="kpi"><div class="kpi-label">Active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Deduplicated within selected data period</div><div class="kpi-avg" id="avg-users" title="Average daily active users">Avg. daily —</div></div>
+        <div class="kpi"><div class="kpi-label">Active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Deduplicated within selected data period</div><div class="kpi-avg" id="avg-users" title="Average daily active users">Avg. daily —</div><div class="kpi-split" id="split-users" title="Returning vs. new active users">Returning vs. New —</div></div>
         <div class="kpi"><div class="kpi-label">Page views</div><div class="kpi-value" id="kpi-views">—</div><div class="kpi-note" id="note-views">Total in selected period</div><div class="kpi-avg" id="avg-views" title="Average daily page views">Avg. daily —</div></div>
         <div class="kpi"><div class="kpi-label">Page views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Average time on site</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-note" id="note-duration">Average session duration</div></div>
@@ -132,6 +132,7 @@
         <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, Top 5 markets, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut. Session mix donuts use remaining page views. Demographic and Device allocate remaining page views by remaining session share when the snapshot has no views split. Product and recipe lists use page views (sessions converted with that day’s views per session when the snapshot has no views split).</li>
         <li>Page views / session is page views ÷ sessions after those filters.</li>
         <li>Active users is a unique-safe count after those filters: the peak remaining daily users in the selected period. The snapshot has no user IDs, weekly unique rolls, or period-level unique-user total — source / medium user counts are still daily — so days are not added together. That peak is a lower bound on everyone who visited on any day, not a full GA4 period unique. Total adds each market’s peak and can count the same person in two markets.</li>
+        <li>Returning vs. New is — because this snapshot has no new/returning split — no newUsers, returning-user, or first-time-user field on the daily series, source records, drivers, extensions, magnetic, refresh, or delta files. The dashboard does not invent a 50/50 split.</li>
         <li>A domain must be selected before any data is shown. Selecting <strong>Total</strong> sums every domain after those filters.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions. Average daily active users, sessions, and page views divide remaining totals by those days that still have remaining traffic (the same “days with data” idea).</li>
@@ -415,6 +416,40 @@
     }
     $(id).innerHTML=html;
   }
+  function metricNum(x,keys){for(const k of keys){const n=x?.[k];if(n!=null&&Number.isFinite(+n))return Math.max(0,+n)}return null}
+  function dailyUserSplit(x){
+    const users=Math.max(0,x.users||0),neu=metricNum(x,["newUsers","new_users"]),ret=metricNum(x,["returningUsers","returning_users"]);
+    if(neu==null&&ret==null)return null;
+    if(neu!=null&&neu<=users)return{new:neu,returning:users-neu};
+    if(ret!=null&&ret<=users)return{new:users-ret,returning:ret};
+    if(neu!=null&&ret!=null)return{new:neu,returning:ret};
+    return null;
+  }
+  function periodUserSplit(key,from=state.start,to=state.end){
+    if(isTotal(key)){
+      let neu=0,ret=0,any=false;
+      domainKeys().forEach(k=>{const s=periodUserSplit(k,from,to);if(!s)return;any=true;neu+=s.new;ret+=s.returning});
+      return any?{new:neu,returning:ret}:null;
+    }
+    const data=rows(key,from,to);
+    let peak=null;
+    data.forEach(x=>{if(!peak||(x.users||0)>(peak.users||0))peak=x});
+    const peakSplit=peak&&dailyUserSplit(peak);
+    if(peakSplit)return peakSplit;
+    let neu=0,ret=0,any=false;
+    data.forEach(x=>{const s=dailyUserSplit(x);if(!s)return;any=true;neu+=s.new;ret+=s.returning});
+    return any?{new:neu,returning:ret}:null;
+  }
+  function formatUserSplit(split){
+    if(!split)return"—";
+    const total=split.new+split.returning;
+    if(!total)return"—";
+    const newPct=Math.round(split.new/total*100),retPct=100-newPct;
+    return"Returning "+retPct+"% · New "+newPct+"%";
+  }
+  function setUserSplit(id,split){
+    $(id).innerHTML='<span class="kpi-split-label">Returning vs. New</span> <span class="kpi-split-value">'+formatUserSplit(split)+"</span>";
+  }
   function render(){
     const domain=resolveDomain(state.host),ready=domain&&state.start&&state.end;
     $("#stamp").textContent=ready?longDate(state.start)+" – "+longDate(state.end):"Select a domain and data period";
@@ -435,6 +470,7 @@
       $("#note-rate").textContent="Page views per session";
       $("#note-duration").textContent="Average session duration";
       setDailyAvg("#avg-sessions",NaN);setDailyAvg("#avg-users",NaN);setDailyAvg("#avg-views",NaN);
+      setUserSplit("#split-users",null);
       $("#chart").innerHTML='<text x="500" y="160" text-anchor="middle" class="axistext">Select a domain to view '+esc(labels[state.metric])+'</text>';
       $("#insight").textContent="";
       $("#ranking").innerHTML='<li class="empty">Select a domain and data period to view markets</li>';
@@ -473,6 +509,7 @@
     setDailyAvg("#avg-sessions",primary.avgSessions,comparison?.avgSessions,kpiCompare);
     setDailyAvg("#avg-users",primary.avgUsers,comparison?.avgUsers,kpiCompare);
     setDailyAvg("#avg-views",primary.avgViews,comparison?.avgViews,kpiCompare);
+    setUserSplit("#split-users",periodUserSplit(state.host));
     if(period){
       const primaryPlot=filledRows(state.host,state.start,state.end),compareFilled=filledRows(state.host,period.start,period.end);
       const comparePlot=primaryPlot.map((row,i)=>{const c=compareFilled[i]||{date:"",sessions:0,users:0,views:0,duration:0};return{...c,date:row.date,tooltipDate:c.date}});
