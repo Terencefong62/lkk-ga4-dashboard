@@ -39,9 +39,14 @@
     .donut-legend .donut-toggle-row{grid-template-columns:8px minmax(0,1fr);gap:7px}
     .donut-more{margin:0;padding:0;border:0;background:none;color:#315b8a;font:inherit;font-size:12px;font-weight:650;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:2px}
     .donut-more:hover{color:var(--red)}.donut-more:focus-visible{outline:2px solid #315b8a;outline-offset:2px;border-radius:3px}
+    .bot-panel{padding:20px 22px 22px}.bot-panel>.empty{padding:40px 20px}
+    .bot-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+    .bot-donuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .bot-donuts .donut-card h3{margin-bottom:6px}
+    .bot-card-note{color:var(--muted);font-size:12px;margin:0 0 12px;line-height:1.4}
     footer{margin-top:28px;color:#817d79;font-size:12px}.footer-source{display:flex;justify-content:space-between;gap:16px 24px;align-items:baseline;flex-wrap:wrap}.footer-source span:first-child{min-width:0;flex:1 1 280px}.footer-source #footer-sync{flex:0 0 auto;white-space:nowrap}.remarks{margin-top:14px;padding-top:12px;border-top:1px solid #e9e5df}.remarks h2{font:inherit;font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#8c8884;margin:0 0 8px}.remarks ol{margin:0;padding-left:1.15em;line-height:1.55;max-width:980px;overflow-wrap:break-word}.remarks li{margin:0 0 5px}.remarks li:last-child{margin-bottom:0}.desktop-note{display:inline}
     @media(max-width:1100px){.toolbar{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}.content-grid{grid-template-columns:repeat(5,280px)}}
-    @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:flex-start}.live{padding:8px 10px}.desktop-note{display:none}.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.main,.ranking{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-toolbar{justify-content:stretch}.chart-toolbar .type-buttons{flex:1 1 100%;min-width:0;width:100%}.chart-wrap{min-height:250px}.donuts{grid-template-columns:1fr}.content-grid{grid-template-columns:repeat(5,260px)}.footer-source{flex-direction:column}}
+    @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:flex-start}.live{padding:8px 10px}.desktop-note{display:none}.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.main,.ranking,.bot-panel{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-toolbar{justify-content:stretch}.chart-toolbar .type-buttons{flex:1 1 100%;min-width:0;width:100%}.chart-wrap{min-height:250px}.donuts,.bot-donuts,.bot-stats{grid-template-columns:1fr}.content-grid{grid-template-columns:repeat(5,260px)}.footer-source{flex-direction:column}}
   </style>
 </head>
 <body>
@@ -103,6 +108,21 @@
 
   <div class="section-head"><div><h2>What visitors are viewing</h2><p>Top five product and recipe detail pages for each leading domain</p></div><div class="badge" id="content-range">Selected period</div></div>
   <section class="content-grid" id="content-grid" aria-label="Top products and recipes"></section>
+  <div class="section-head" id="bot-head"><div><h2>Bot Filtered Traffic</h2><p>Share of unfiltered sessions excluded as bot-like; see Remarks</p></div><div class="badge" id="bot-range">Selected period</div></div>
+  <section class="panel bot-panel" id="bot-filtered" aria-label="Bot filtered traffic">
+    <div class="empty" id="bot-empty">Select a domain and data period to view bot-filtered traffic</div>
+    <div id="bot-body" hidden>
+      <div class="bot-stats">
+        <div class="kpi"><div class="kpi-label">% of traffic filtered out</div><div class="kpi-value" id="bot-pct">—</div><div class="kpi-note" id="bot-pct-note">Share of unfiltered sessions</div></div>
+        <div class="kpi"><div class="kpi-label">Page views filtered</div><div class="kpi-value" id="bot-views">—</div><div class="kpi-note" id="bot-views-note">From daily exclusion arrays</div></div>
+      </div>
+      <div class="bot-donuts" id="bot-donuts">
+        <article class="donut-card"><h3>Country</h3><p class="bot-card-note">China 0–3s is China. Zero-time source/medium groups are not country-split.</p><div class="donut-body" id="bot-donut-country"></div></article>
+        <article class="donut-card"><h3>Source / medium</h3><p class="bot-card-note">Zero-time source/medium groups, plus China 0–3s when that slice has no source split.</p><div class="donut-body" id="bot-donut-source"></div></article>
+        <article class="donut-card"><h3>Page visited</h3><p class="bot-card-note">Product and recipe lists are date-clipped only and are not joined to these exclusions.</p><div class="donut-body" id="bot-donut-page"></div></article>
+      </div>
+    </div>
+  </section>
   <footer>
     <div class="footer-source"><span>Source: Google Analytics 4 via connected Supermetrics account. Figures on this page apply the filters listed in Remarks.</span><span id="footer-sync"></span></div>
     <div class="remarks">
@@ -115,6 +135,7 @@
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions.</li>
         <li>Top 5 markets shows the five markets with the most remaining sessions. What visitors are viewing shows the five markets with the most remaining page views.</li>
+        <li>Bot Filtered Traffic shows the sessions those rules excluded, not remaining traffic. The headline percentage is filtered sessions ÷ unfiltered (raw) sessions for the selected domain or Total.</li>
       </ol>
     </div>
   </footer>
@@ -396,6 +417,9 @@
       $("#content-grid").innerHTML='<div class="empty">Select a domain and data period to view top products and recipes</div>';
       $("#focus-content").hidden=true;
       $("#donuts").hidden=true;
+      $("#bot-range").textContent="Awaiting selection";
+      $("#bot-empty").hidden=false;
+      $("#bot-body").hidden=true;
       return;
     }
     syncCompareTotalOption();
@@ -423,7 +447,7 @@
       const comparePlot=primaryPlot.map((row,i)=>{const c=compareFilled[i]||{date:"",sessions:0,users:0,views:0,duration:0};return{...c,date:row.date,tooltipDate:c.date}});
       draw(primaryPlot,comparePlot,domain,periodTarget);
     }else draw(primary.data,comparison?.data||[],domain,compareDomain);
-    renderRanking();renderInsight(primary,domain,comparison,compareDomain,period);renderDonuts(domain);renderFocusContent(domain);renderContent();
+    renderRanking();renderInsight(primary,domain,comparison,compareDomain,period);renderDonuts(domain);renderFocusContent(domain);renderContent();renderBotFiltered(domain);
   }
   function axisLabel(s,withYear){if(!s)return"";const d=new Date(s+"T12:00:00");return withYear?d.toLocaleDateString("en",{month:"short",day:"numeric",year:"2-digit"}):dateFmt(s)}
   function draw(data,compareData,domain,compareDomain){
@@ -535,7 +559,58 @@
   }
   function contentSection(label,r,showPct,bars=false,showMarket=false){return'<div class="list-title"><span>'+label+'</span>'+(r?'<span class="list-total">'+fmt(r.total)+' '+contentUnit+'</span>':'')+'</div>'+contentList(r,showPct,bars,showMarket)}
   const DONUT_COLORS=["#b20e18","#e32d39","#315b8a","#8a7d72","#147a55"],DONUT_OTHER="#c4b8aa",DONUT_EXTRA=["#9d9084","#8f8378","#81766c","#736a61","#655e56"];
-  const donutExpanded={source:false,country:false,device:false};
+  const donutExpanded={source:false,country:false,device:false,botCountry:false,botSource:false};
+  const BOT_SOURCE_UNSPLIT="China 0–3s (no source split)",BOT_COUNTRY_UNSPLIT="Unknown / not split by country";
+  function rawSeries(key,from=state.start,to=state.end){
+    const keys=isTotal(key)?domainKeys():[key];
+    let sessions=0,users=0,views=0;
+    keys.forEach(k=>{(D.series[k]||[]).forEach(x=>{if(x.date>=from&&x.date<=to){sessions+=x.sessions||0;users+=x.users||0;views+=x.views||0}})});
+    return{sessions,users,views};
+  }
+  function sumDaily(daily,component=0){let n=0;daily.forEach(v=>n+=v[component]||0);return n}
+  function botCountryMap(key,from=state.start,to=state.end){
+    const m=new Map(),keys=isTotal(key)?domainKeys():[key];
+    keys.forEach(k=>{
+      const china=sumDaily(chinaProfile(k,from,to).daily,0),source=sumDaily(sourceProfile(k,from,to).daily,0);
+      if(china)m.set("China",(m.get("China")||0)+china);
+      if(source)m.set(BOT_COUNTRY_UNSPLIT,(m.get(BOT_COUNTRY_UNSPLIT)||0)+source);
+    });
+    return m;
+  }
+  function botSourceMap(key,from=state.start,to=state.end){
+    const m=new Map(),keys=isTotal(key)?domainKeys():[key];
+    const start=Math.round((Date.parse(from+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(to+"T00:00:00Z")-base)/86400000);
+    keys.forEach(k=>{
+      const source=window.GA4_SOURCE_DATA?.[k],profile=sourceProfile(k,from,to);
+      if(source)source.records.forEach(r=>{
+        if(r[0]<start||r[0]>end)return;
+        const label=source.sources[r[1]];
+        if(!profile.bad.has(label))return;
+        const n=Number(r[2])||0;
+        if(n)m.set(label,(m.get(label)||0)+n);
+      });
+      const china=sumDaily(chinaProfile(k,from,to).daily,0);
+      if(china)m.set(BOT_SOURCE_UNSPLIT,(m.get(BOT_SOURCE_UNSPLIT)||0)+china);
+    });
+    return m;
+  }
+  function pctTxt(n){if(!Number.isFinite(n))return"—";return(n>=10?n.toFixed(0):n.toFixed(1))+"%"}
+  function renderBotFiltered(domain){
+    $("#bot-range").textContent=dateFmt(state.start)+" – "+dateFmt(state.end);
+    $("#bot-empty").hidden=true;
+    $("#bot-body").hidden=false;
+    const key=keyOf(domain),data=rows(key),raw=rawSeries(key);
+    const remaining=data.reduce((n,x)=>n+(x.sessions||0),0),remainingViews=data.reduce((n,x)=>n+(x.views||0),0);
+    const filtered=Math.max(0,raw.sessions-remaining),filteredViews=Math.max(0,raw.views-remainingViews);
+    const sessPct=raw.sessions?filtered/raw.sessions*100:NaN,viewPct=raw.views?filteredViews/raw.views*100:NaN;
+    $("#bot-pct").textContent=pctTxt(sessPct);
+    $("#bot-pct-note").textContent=raw.sessions?(fmt(filtered)+" filtered · "+pctTxt(sessPct)+" of "+fmt(raw.sessions)+" · "+fmt(remaining)+" remaining"):"No unfiltered sessions in this period";
+    $("#bot-views").textContent=raw.views?fmt(filteredViews):"—";
+    $("#bot-views-note").textContent=raw.views?(fmt(filteredViews)+" filtered · "+pctTxt(viewPct)+" of "+fmt(raw.views)+" unfiltered page views"):"No unfiltered page views in this period";
+    $("#bot-donut-country").innerHTML=donutMarkup(slicePlan(botCountryMap(key)),"botCountry","sessions");
+    $("#bot-donut-source").innerHTML=donutMarkup(slicePlan(botSourceMap(key)),"botSource","sessions");
+    $("#bot-donut-page").innerHTML='<div class="donut-empty">Page-level bot attribution is not in this snapshot. Zero-time source/medium and China 0–3s records have no page or path field, so this card does not invent a ranking from remaining Top 5 pages.</div>';
+  }
   function vagueLabel(s){const t=String(s??"").trim().toLowerCase();return!t||t==="(not set)"||t==="not set"}
   function slicePlan(map,limit=5,extra=5){
     const items=[...map.entries()].filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
@@ -611,6 +686,13 @@
     donutExpanded[id]=!donutExpanded[id];
     const domain=resolveDomain(state.host);if(domain&&state.start&&state.end)renderDonuts(domain);
     const next=$('#donuts [data-donut-toggle="'+id+'"]');if(next)next.focus();
+  });
+  $("#bot-donuts").addEventListener("click",e=>{
+    const btn=e.target.closest("[data-donut-toggle]");if(!btn)return;
+    const id=btn.getAttribute("data-donut-toggle");if(!Object.prototype.hasOwnProperty.call(donutExpanded,id))return;
+    donutExpanded[id]=!donutExpanded[id];
+    const domain=resolveDomain(state.host);if(domain&&state.start&&state.end)renderBotFiltered(domain);
+    const next=$('#bot-donuts [data-donut-toggle="'+id+'"]');if(next)next.focus();
   });
   const sync=new Date(D.refreshedAt).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short",timeZone:D.timezone});$("#stamp").title="Data synced "+sync;$("#footer-sync").textContent="Last GA4 sync: "+sync+" HKT";$("#remarks-window").textContent=longDate(D.dataStart)+" – "+longDate(D.dataEnd);syncDates();render();
 </script>
