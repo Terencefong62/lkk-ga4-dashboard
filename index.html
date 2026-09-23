@@ -16,7 +16,7 @@
     .type-buttons button:focus-visible,.rank-head:focus-visible{outline:3px solid #f19ba1;outline-offset:2px}
     .grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(310px,.9fr);gap:18px;margin-top:18px}.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
     .main{padding:22px}.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.panel h2{font-family:Georgia,serif;font-size:22px;margin:0 0 5px;font-weight:600}.sub{color:var(--muted);font-size:13px}
-    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px}.kpi-label{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:25px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta{font-weight:700}.kpi-note .delta.up{color:var(--green)}.kpi-note .delta.down{color:var(--red)}
+    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:10px}.kpis-daily{margin-bottom:20px}.kpi{background:#f8f7f4;border:1px solid #ece9e3;border-radius:14px;padding:14px}.kpi-label{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}.kpi-value{font-size:25px;font-weight:730;letter-spacing:-.7px}.kpi-note{font-size:11px;color:#928e8a;margin-top:5px}.kpi-note .delta{font-weight:700}.kpi-note .delta.up{color:var(--green)}.kpi-note .delta.down{color:var(--red)}
     .chart-toolbar{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px 12px;margin:0 0 10px}.chart-type-label{font-size:12px;color:var(--muted);font-weight:650}.type-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;min-width:min(100%,216px);background:#f8f7f4;border:1px solid #ece9e3;border-radius:10px;padding:3px}.type-buttons button{border:0;border-radius:7px;padding:7px 10px;background:transparent;color:var(--muted);cursor:pointer;font-weight:650}.type-buttons button.active{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(25,20,18,.08)}
     .chart-wrap{position:relative;min-height:315px}.chart{width:100%;height:auto;display:block;overflow:visible}.gridline{stroke:#ebe8e2;stroke-width:1}.axistext{fill:#8c8884;font-size:11px}.axistext.compare{fill:#315b8a}.chartline,.compareline{fill:none;stroke:var(--red);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.compareline{stroke:#315b8a;stroke-width:2.5;stroke-dasharray:8 6}.areafill{fill:url(#area)}.bar{fill:var(--red);opacity:.9}.comparebar{fill:#315b8a;opacity:.85}.point{fill:#fff;stroke:var(--red);stroke-width:2}.comparepoint{fill:#fff;stroke:#315b8a;stroke-width:2}.tooltip{position:absolute;pointer-events:none;background:#151515;color:#fff;padding:9px 11px;border-radius:9px;font-size:12px;box-shadow:0 8px 30px #0003;opacity:0;transform:translate(-50%,-115%);white-space:nowrap;transition:opacity .1s}.legend{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:var(--muted)}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:16px;height:3px;border-radius:3px;background:var(--red)}.legend i.compare{background:#315b8a}
     .insights{margin:0 0 18px}.insights:has(#insight:empty){display:none}.insights-label{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 8px}.insight{border-left:3px solid var(--red);background:var(--soft);padding:12px 14px;border-radius:0 10px 10px 0;font-size:13px;line-height:1.5}.insight-part+.insight-part{margin-top:10px;padding-top:10px;border-top:1px solid #ecd4d4}.insight-part-label{font-family:Georgia,serif;font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--red);font-weight:800;margin:0 0 5px}.insight-part-body{margin:0}.insight-actions{margin:0;padding-left:1.2em}.insight-actions li+li{margin-top:5px}
@@ -68,13 +68,18 @@
 
   <div class="grid">
     <section class="panel main">
-      <div class="panel-head"><div><h2 id="chart-title">Traffic trend</h2></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
+      <div class="panel-head"><div><h2 id="chart-title">Traffic trend · Sessions</h2></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
       <div class="kpis">
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div></div>
-        <div class="kpi"><div class="kpi-label">Active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Sum of daily active users</div></div>
+        <div class="kpi"><div class="kpi-label">Active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">deduplicated in selected data period</div></div>
         <div class="kpi"><div class="kpi-label">Page views</div><div class="kpi-value" id="kpi-views">—</div><div class="kpi-note" id="note-views">Total in selected period</div></div>
         <div class="kpi"><div class="kpi-label">Page views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Average time on site</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-note" id="note-duration">Average session duration</div></div>
+      </div>
+      <div class="kpis kpis-daily">
+        <div class="kpi"><div class="kpi-label">Average daily active users</div><div class="kpi-value" id="kpi-avg-users">—</div><div class="kpi-note" id="note-avg-users">Average per day with data</div></div>
+        <div class="kpi"><div class="kpi-label">Average daily sessions</div><div class="kpi-value" id="kpi-avg-sessions">—</div><div class="kpi-note" id="note-avg-sessions">Average per day with data</div></div>
+        <div class="kpi"><div class="kpi-label">Average daily page views</div><div class="kpi-value" id="kpi-avg-views">—</div><div class="kpi-note" id="note-avg-views">Average per day with data</div></div>
       </div>
       <div class="insights" id="insights">
         <h3 class="insights-label">Actionable Insights</h3>
@@ -88,7 +93,7 @@
           <button type="button" data-type="bar">Bar</button>
         </div>
       </div>
-      <div class="chart-wrap" id="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 1000 315" role="img" aria-label="Traffic trend chart"></svg><div class="tooltip" id="tooltip"></div></div>
+      <div class="chart-wrap" id="chart-wrap"><svg id="chart" class="chart" viewBox="0 0 1000 315" role="img" aria-label="Traffic trend"></svg><div class="tooltip" id="tooltip"></div></div>
       <div class="donuts" id="donuts" hidden>
         <div class="donuts-head"><h3 id="donuts-title">Session mix</h3><div class="sub" id="donuts-sub"></div></div>
         <article class="donut-card"><h3>Source / medium</h3><div class="donut-body" id="donut-source"></div></article>
@@ -131,10 +136,10 @@
         <li><strong>Bot-like traffic</strong> is a dashboard definition, not Google Analytics’ built-in bot detection. A session is treated as bot-like if (1) it belongs to a source/medium whose average session duration is 0:00 in the selected period, or (2) it is a China session whose average duration is 0–3 seconds (China on desktop when that split is available). If a day’s remaining time on site is still 0–3 seconds after rule 1, every China session that day is also treated as bot-like.</li>
         <li>Bot-like traffic is removed from sessions, users, page views, Page views / session, and time on site in the KPI cards, trend chart, Top 5 markets, donuts, and Actionable Insights. Product and recipe lists are not split by country and are not reduced by the China 0–3s rule. Zero-time source/medium groups are still excluded from the Source / medium donut. Session mix donuts use remaining page views. Demographic and Device allocate remaining page views by remaining session share when the snapshot has no views split. Product and recipe lists use page views (sessions converted with that day’s views per session when the snapshot has no views split).</li>
         <li>Page views / session is page views ÷ sessions after those filters.</li>
-        <li>Active users is the sum of daily active users in the snapshot after those filters. It is not a de-duplicated unique-user count for the whole period.</li>
+        <li>Active users is a unique-safe count after those filters: the peak remaining daily users in the selected period. The snapshot has no user IDs, weekly unique rolls, or period-level unique-user total — source / medium user counts are still daily — so days are not added together. That peak is a lower bound on everyone who visited on any day, not a full GA4 period unique. Total adds each market’s peak and can count the same person in two markets.</li>
         <li>A domain must be selected before any data is shown. Selecting <strong>Total</strong> sums every domain after those filters.</li>
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
-        <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions.</li>
+        <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions. Average daily active users, sessions, and page views divide remaining totals by those days that still have remaining traffic (the same “days with data” idea).</li>
         <li>Top 5 markets shows the five markets with the most remaining sessions. What visitors are viewing shows the five markets with the most remaining page views.</li>
         <li>Bot Filtered Traffic shows the sessions those rules excluded, not remaining traffic. The headline percentage is filtered sessions ÷ unfiltered (raw) sessions for the selected domain or Total.</li>
       </ol>
@@ -228,7 +233,16 @@
   }
   function filledRows(key,from,to){const map=new Map(rows(key,from,to).map(x=>[x.date,x]));return rangeDates(from,to).map(date=>map.get(date)||{date,sessions:0,users:0,views:0,duration:0})}
   function total(key,metric){return rows(key).reduce((a,x)=>a+(x[metric]||0),0)}
-  function stats(key,from=state.start,to=state.end){const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),users=data.reduce((n,x)=>n+(x.users||0),0),durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;return{data,sessions,users,views,rate:sessions?views/sessions:NaN,duration}}
+  function periodUsers(key,from=state.start,to=state.end){
+    if(isTotal(key))return domainKeys().reduce((n,k)=>n+periodUsers(k,from,to),0);
+    return rows(key,from,to).reduce((m,x)=>Math.max(m,x.users||0),0);
+  }
+  function daysWithData(data){return data.filter(x=>(x.sessions||0)>0||(x.users||0)>0||(x.views||0)>0).length}
+  function stats(key,from=state.start,to=state.end){
+    const data=rows(key,from,to),sessions=data.reduce((n,x)=>n+x.sessions,0),views=data.reduce((n,x)=>n+x.views,0),userDays=data.reduce((n,x)=>n+(x.users||0),0),users=periodUsers(key,from,to),days=daysWithData(data);
+    const durationSessions=data.filter(x=>x.duration>0).reduce((n,x)=>n+x.sessions,0),duration=durationSessions?data.reduce((n,x)=>n+x.duration*x.sessions,0)/durationSessions:NaN;
+    return{data,sessions,users,views,userDays,days,rate:sessions?views/sessions:NaN,duration,avgUsers:days?userDays/days:NaN,avgSessions:days?sessions/days:NaN,avgViews:days?views/days:NaN};
+  }
   function setPreset(value){
     if(!value||value==="custom"){
       state.start="";state.end="";
@@ -404,15 +418,18 @@
       state.periodCompare="";$("#period-compare").value="";
       $("#compare").disabled=true;$("#period-compare").disabled=true;
       $("#compare").title="";$("#period-compare").title="";
-      $("#chart-title").textContent="Traffic trend";
+      $("#chart-title").textContent="Traffic trend · "+labels[state.metric];
+      $("#chart").setAttribute("aria-label","Traffic trend · "+labels[state.metric]);
       $("#legend").innerHTML="";
       $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-duration").textContent="—";
+      $("#kpi-avg-users").textContent=$("#kpi-avg-sessions").textContent=$("#kpi-avg-views").textContent="—";
       $("#note-sessions").textContent="Total in selected period";
-      $("#note-users").textContent="Sum of daily active users";
+      $("#note-users").textContent="deduplicated in selected data period";
       $("#note-views").textContent="Total in selected period";
       $("#note-rate").textContent="Page views per session";
       $("#note-duration").textContent="Average session duration";
-      $("#chart").innerHTML='<text x="500" y="160" text-anchor="middle" class="axistext">Select a domain and data period to view traffic</text>';
+      $("#note-avg-users").textContent=$("#note-avg-sessions").textContent=$("#note-avg-views").textContent="Average per day with data";
+      $("#chart").innerHTML='<text x="500" y="160" text-anchor="middle" class="axistext">Select a domain to view '+esc(labels[state.metric])+'</text>';
       $("#insight").textContent="";
       $("#ranking").innerHTML='<li class="empty">Select a domain and data period to view markets</li>';
       $("#content-grid").innerHTML='<div class="empty">Select a domain and data period to view top products and recipes</div>';
@@ -428,21 +445,29 @@
     $("#compare").disabled=!!period;$("#period-compare").disabled=!!compareDomain;
     $("#compare").title=period?"Unavailable while comparing another period":"";
     $("#period-compare").title=compareDomain?"Unavailable while comparing another domain":"";
+    const metricLabel=labels[state.metric];
     if(compareDomain){
-      $("#chart-title").textContent=domain.label+" vs "+compareDomain.label;
+      $("#chart-title").textContent=domain.label+" vs "+compareDomain.label+" · "+metricLabel;
+      $("#chart").setAttribute("aria-label",domain.label+" vs "+compareDomain.label+" · "+metricLabel);
       $("#legend").innerHTML='<span><i></i>'+esc(domain.label)+'</span><span><i class="compare"></i>'+esc(compareDomain.label)+'</span>';
     }else if(period){
-      $("#chart-title").textContent=domain.label+" vs "+period.label;
+      $("#chart-title").textContent=domain.label+" vs "+period.label+" · "+metricLabel;
+      $("#chart").setAttribute("aria-label",domain.label+" vs "+period.label+" · "+metricLabel);
       $("#legend").innerHTML='<span><i></i>'+dateFmt(state.start)+" – "+dateFmt(state.end)+" "+state.start.slice(0,4)+'</span><span><i class="compare"></i>'+dateFmt(period.start)+" – "+dateFmt(period.end)+" "+period.start.slice(0,4)+'</span>';
     }else{
-      $("#chart-title").textContent=domain.label+" traffic";
+      $("#chart-title").textContent=domain.label+" · "+metricLabel;
+      $("#chart").setAttribute("aria-label",domain.label+" · "+metricLabel);
       $("#legend").innerHTML="";
     }
+    const avgFmt=n=>Number.isFinite(n)?fmt(n):"—";
     setKpi("#kpi-sessions","#note-sessions",primary.sessions,fmt,comparison?.sessions,kpiCompare,"Total in selected period");
-    setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"Sum of daily active users");
+    setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"deduplicated in selected data period");
     setKpi("#kpi-views","#note-views",primary.views,fmt,comparison?.views,kpiCompare,"Total in selected period");
     setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Page views per session");
     setKpi("#kpi-duration","#note-duration",primary.duration,durationFmt,comparison?.duration,kpiCompare,"Average session duration");
+    setKpi("#kpi-avg-users","#note-avg-users",primary.avgUsers,avgFmt,comparison?.avgUsers,kpiCompare,"Average per day with data");
+    setKpi("#kpi-avg-sessions","#note-avg-sessions",primary.avgSessions,avgFmt,comparison?.avgSessions,kpiCompare,"Average per day with data");
+    setKpi("#kpi-avg-views","#note-avg-views",primary.avgViews,avgFmt,comparison?.avgViews,kpiCompare,"Average per day with data");
     if(period){
       const primaryPlot=filledRows(state.host,state.start,state.end),compareFilled=filledRows(state.host,period.start,period.end);
       const comparePlot=primaryPlot.map((row,i)=>{const c=compareFilled[i]||{date:"",sessions:0,users:0,views:0,duration:0};return{...c,date:row.date,tooltipDate:c.date}});
@@ -641,17 +666,6 @@
     }
     return floors.map(t=>t>=100&&t%10===0?(t/10).toFixed(0)+"%":(t/10).toFixed(1)+"%");
   }
-  function clipLabel(s,max){s=String(s??"").trim();return s.length<=max?s:s.slice(0,max-1)+"…"}
-  function donutLabelLines(label){
-    const s=String(label??"").trim(),parts=s.split(" / ");
-    if(parts.length>=2)return[clipLabel(parts[0],14),clipLabel(parts.slice(1).join(" / "),14)];
-    const paren=s.indexOf(" (");
-    if(paren>=4&&s.length>16)return[clipLabel(s.slice(0,paren),16),clipLabel(s.slice(paren+1),18)];
-    if(s.length<=16)return[s];
-    const wrap=s.lastIndexOf(" ",16);
-    if(wrap>=6)return[s.slice(0,wrap),clipLabel(s.slice(wrap+1),16)];
-    return[clipLabel(s,16)];
-  }
   function donutMarkup(plan,id,unit){
     const expanded=!!donutExpanded[id],donutSlices=plan.top.slice();
     if(plan.other>0)donutSlices.push({label:"Other",value:plan.other,other:true});
@@ -662,9 +676,9 @@
     const paths=donutSlices.map((s,i)=>{const color=s.other?DONUT_OTHER:DONUT_COLORS[i%DONUT_COLORS.length],sweep=s.value/total*span,d=donutSlice(50,50,26,42,start,start+sweep,color);start+=sweep+gap;return d}).join("");
     const legendSlices=expanded?[...plan.top,...plan.more,...(plan.otherAfterMore>0?[{label:"Other",value:plan.otherAfterMore,other:true}]:[])]:donutSlices;
     const pcts=sharePercents(legendSlices.map(s=>s.value));
-    const lead=legendSlices[0],leadTxt=pcts[0],lines=donutLabelLines(lead.label),two=lines.length>1;
-    const sub=lines.map((line,i)=>'<tspan x="50" y="'+(two?54+i*8:59)+'">'+esc(line)+'</tspan>').join("");
-    const svg='<svg viewBox="0 0 100 100" role="img" aria-label="'+esc(lead.label)+' '+leadTxt+' of '+unit+'"><g>'+paths+'</g><text class="donut-center" x="50" y="'+(two?43.5:46)+'" text-anchor="middle">'+leadTxt+'</text><text class="donut-center-sub" text-anchor="middle">'+sub+'</text></svg>';
+    const namedSum=plan.top.reduce((n,s)=>n+s.value,0);
+    const centerTxt=plan.other>0?sharePercents([namedSum,plan.other])[0]:"100%";
+    const svg='<svg viewBox="0 0 100 100" role="img" aria-label="'+centerTxt+' of total '+unit+'"><g>'+paths+'</g><text class="donut-center" x="50" y="46" text-anchor="middle">'+centerTxt+'</text><text class="donut-center-sub" x="50" y="59" text-anchor="middle">of total</text></svg>';
     let extraI=0;
     const items=legendSlices.map((s,i)=>{
       const extra=!!s.extra,color=s.other?DONUT_OTHER:extra?DONUT_EXTRA[extraI++%DONUT_EXTRA.length]:DONUT_COLORS[i%DONUT_COLORS.length];
