@@ -645,6 +645,11 @@
   function donutLabelLines(label){
     const s=String(label??"").trim(),parts=s.split(" / ");
     if(parts.length>=2)return[clipLabel(parts[0],14),clipLabel(parts.slice(1).join(" / "),14)];
+    const paren=s.indexOf(" (");
+    if(paren>=4&&s.length>16)return[clipLabel(s.slice(0,paren),16),clipLabel(s.slice(paren+1),18)];
+    if(s.length<=16)return[s];
+    const wrap=s.lastIndexOf(" ",16);
+    if(wrap>=6)return[s.slice(0,wrap),clipLabel(s.slice(wrap+1),16)];
     return[clipLabel(s,16)];
   }
   function donutMarkup(plan,id,unit){
