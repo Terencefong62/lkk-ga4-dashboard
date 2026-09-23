@@ -71,7 +71,7 @@
       <div class="panel-head"><div><h2 id="chart-title">Traffic trend · Sessions</h2></div><div><div class="stamp" id="stamp"></div><div class="legend" id="legend"></div></div></div>
       <div class="kpis">
         <div class="kpi"><div class="kpi-label">Sessions</div><div class="kpi-value" id="kpi-sessions">—</div><div class="kpi-note" id="note-sessions">Total in selected period</div></div>
-        <div class="kpi"><div class="kpi-label">Active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">deduplicated in selected data period</div></div>
+        <div class="kpi"><div class="kpi-label">Active users</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-note" id="note-users">Deduplicated within selected data period</div></div>
         <div class="kpi"><div class="kpi-label">Page views</div><div class="kpi-value" id="kpi-views">—</div><div class="kpi-note" id="note-views">Total in selected period</div></div>
         <div class="kpi"><div class="kpi-label">Page views / session</div><div class="kpi-value" id="kpi-rate">—</div><div class="kpi-note" id="note-rate">Page views per session</div></div>
         <div class="kpi"><div class="kpi-label">Average time on site</div><div class="kpi-value" id="kpi-duration">—</div><div class="kpi-note" id="note-duration">Average session duration</div></div>
@@ -424,7 +424,7 @@
       $("#kpi-sessions").textContent=$("#kpi-users").textContent=$("#kpi-views").textContent=$("#kpi-rate").textContent=$("#kpi-duration").textContent="—";
       $("#kpi-avg-users").textContent=$("#kpi-avg-sessions").textContent=$("#kpi-avg-views").textContent="—";
       $("#note-sessions").textContent="Total in selected period";
-      $("#note-users").textContent="deduplicated in selected data period";
+      $("#note-users").textContent="Deduplicated within selected data period";
       $("#note-views").textContent="Total in selected period";
       $("#note-rate").textContent="Page views per session";
       $("#note-duration").textContent="Average session duration";
@@ -461,7 +461,7 @@
     }
     const avgFmt=n=>Number.isFinite(n)?fmt(n):"—";
     setKpi("#kpi-sessions","#note-sessions",primary.sessions,fmt,comparison?.sessions,kpiCompare,"Total in selected period");
-    setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"deduplicated in selected data period");
+    setKpi("#kpi-users","#note-users",primary.users,fmt,comparison?.users,kpiCompare,"Deduplicated within selected data period");
     setKpi("#kpi-views","#note-views",primary.views,fmt,comparison?.views,kpiCompare,"Total in selected period");
     setKpi("#kpi-rate","#note-rate",primary.rate,n=>Number.isFinite(n)?n.toFixed(2):"—",comparison?.rate,kpiCompare,"Page views per session");
     setKpi("#kpi-duration","#note-duration",primary.duration,durationFmt,comparison?.duration,kpiCompare,"Average session duration");
