@@ -1,0 +1,199 @@
+[
+  {
+    "key": "hk.lkk.com",
+    "host": "hk.lkk.com",
+    "label": "Hong Kong"
+  },
+  {
+    "key": "usa.lkk.com",
+    "host": "usa.lkk.com",
+    "label": "United States"
+  },
+  {
+    "key": "malaysia.lkk.com",
+    "host": "malaysia.lkk.com",
+    "label": "Malaysia"
+  },
+  {
+    "key": "ca.lkk.com",
+    "host": "ca.lkk.com",
+    "label": "Canada"
+  },
+  {
+    "key": "tw.lkk.com",
+    "host": "tw.lkk.com",
+    "label": "Taiwan"
+  },
+  {
+    "key": "au.lkk.com",
+    "host": "au.lkk.com",
+    "label": "Australia"
+  },
+  {
+    "key": "sg.lkk.com",
+    "host": "sg.lkk.com",
+    "label": "Singapore"
+  },
+  {
+    "key": "kr.lkk.com",
+    "host": "kr.lkk.com",
+    "label": "South Korea"
+  },
+  {
+    "key": "csa.lkk.com",
+    "host": "csa.lkk.com",
+    "label": "Central & South America"
+  },
+  {
+    "key": "id.lkk.com",
+    "host": "id.lkk.com",
+    "label": "Indonesia"
+  },
+  {
+    "key": "eu.lkk.com",
+    "host": "eu.lkk.com",
+    "label": "Europe"
+  },
+  {
+    "key": "nz.lkk.com",
+    "host": "nz.lkk.com",
+    "label": "New Zealand"
+  },
+  {
+    "key": "jp.lkk.com",
+    "host": "jp.lkk.com",
+    "label": "Japan"
+  },
+  {
+    "key": "ph.lkk.com",
+    "host": "ph.lkk.com",
+    "label": "Philippines"
+  },
+  {
+    "key": "in.lkk.com",
+    "host": "in.lkk.com",
+    "label": "India"
+  },
+  {
+    "key": "vn.lkk.com",
+    "host": "vn.lkk.com",
+    "label": "Vietnam"
+  },
+  {
+    "key": "corporate.lkk.com",
+    "host": "corporate.lkk.com",
+    "label": "Corporate Site"
+  },
+  {
+    "key": "gawa:259299200",
+    "host": "shopuk.lkk.com",
+    "label": "United Kingdom \u2014 Shopify",
+    "propertyId": "259299200",
+    "propertyName": "LKK - Shopify - GA4"
+  },
+  {
+    "key": "gawa:270258410",
+    "host": "www.lkkprofessional.com",
+    "label": "Germany \u2014 Professional",
+    "propertyId": "270258410",
+    "propertyName": "LKK Professional DE Property"
+  },
+  {
+    "key": "gawa:274757322",
+    "host": "uk.lkk.com",
+    "label": "United Kingdom",
+    "propertyId": "274757322",
+    "propertyName": "LKK - UK - GA4"
+  },
+  {
+    "key": "gawa:359131146",
+    "host": "gr.lkk.com",
+    "label": "Greece",
+    "propertyId": "359131146",
+    "propertyName": "Lkk-Greece - GA4"
+  },
+  {
+    "key": "gawa:359138868",
+    "host": "www.lkkprofessional.com",
+    "label": "Netherlands \u2014 Professional",
+    "propertyId": "359138868",
+    "propertyName": "LKK Professional NL - GA4"
+  },
+  {
+    "key": "gawa:359140744",
+    "host": "de.lkk.com",
+    "label": "Germany",
+    "propertyId": "359140744",
+    "propertyName": "LKK - DE (Magnetic) - GA4"
+  },
+  {
+    "key": "gawa:359143062",
+    "host": "nl.lkk.com",
+    "label": "Netherlands",
+    "propertyId": "359143062",
+    "propertyName": "LKK - NL (Magnetic) - GA4"
+  },
+  {
+    "key": "gawa:359143969",
+    "host": "www.lkkprofessional.com",
+    "label": "Global \u2014 Professional",
+    "propertyId": "359143969",
+    "propertyName": "LKK - Professional - GA4"
+  },
+  {
+    "key": "gawa:359148543",
+    "host": "pl.lkk.com",
+    "label": "Poland",
+    "propertyId": "359148543",
+    "propertyName": "LKK - PL - GA4"
+  },
+  {
+    "key": "gawa:359149333",
+    "host": "es.lkk.com",
+    "label": "Spain",
+    "propertyId": "359149333",
+    "propertyName": "LKK - ES - GA4"
+  },
+  {
+    "key": "gawa:359151329",
+    "host": "cz.lkk.com",
+    "label": "Czech Republic",
+    "propertyId": "359151329",
+    "propertyName": "LKK - CZ - GA4"
+  },
+  {
+    "key": "gawa:359159762",
+    "host": "No hostname recorded",
+    "label": "United Kingdom \u2014 Hot Wok Kitchen",
+    "propertyId": "359159762",
+    "propertyName": "LKK - Hot Wok Kitchen - GA4"
+  },
+  {
+    "key": "gawa:359359758",
+    "host": "fr.lkk.com",
+    "label": "France",
+    "propertyId": "359359758",
+    "propertyName": "LKK - France - GA4"
+  },
+  {
+    "key": "gawa:435274171",
+    "host": "kungfudragon.co.uk",
+    "label": "United Kingdom \u2014 Kung Fu LKK",
+    "propertyId": "435274171",
+    "propertyName": "Kung Fu LKK - GA4"
+  },
+  {
+    "key": "gawa:482136493",
+    "host": "bg.lkk.com",
+    "label": "Bulgaria",
+    "propertyId": "482136493",
+    "propertyName": "Bulgaria"
+  },
+  {
+    "key": "gawa:507647134",
+    "host": "pt.lkk.com",
+    "label": "Portugal",
+    "propertyId": "507647134",
+    "propertyName": "pt.lkk.com"
+  }
+]
