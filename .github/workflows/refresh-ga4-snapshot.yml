@@ -1,12 +1,14 @@
 name: Refresh GA4 snapshot
 
-# Manual refresh only. The job writes a new JSON snapshot artifact and does
-# not replace the published dashboard JavaScript (data.js, chunks/, refresh.js,
-# and the other live snapshot files).
+# Daily refresh at 08:00 Asia/Shanghai. A successful pull rewrites the live
+# dashboard JavaScript (data.js, chunks/, duration.js, sources.js,
+# drivers-complete.js, and the patch files index.html still loads) and commits
+# that snapshot to main. It does not commit the service-account JSON or the
+# snapshot-refresh/ artifact.
 on:
   schedule:
-      # 08:00 Asia/Shanghai, every day (GitHub schedules use UTC)
-    - cron: '0 0 * * *'
+    # 08:00 Asia/Shanghai, every day (GitHub schedules use UTC).
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       start_date:
@@ -23,7 +25,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ga4-snapshot-refresh
@@ -35,6 +37,9 @@ jobs:
     steps:
       - name: Check out dashboard
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,7 +49,7 @@ jobs:
       - name: Install the official Google Analytics MCP server
         run: pip install -r scripts/requirements-ga4-refresh.txt
 
-      - name: Refresh snapshot
+      - name: Refresh snapshot JSON
         env:
           # The GitHub Actions secret must be named GA4_SERVICE_ACCOUNT_JSON
           # and must contain the service account JSON. Do not commit that JSON.
@@ -60,3 +65,36 @@ jobs:
           name: ga4-snapshot
           path: snapshot-refresh/ga4-snapshot.json
           if-no-files-found: error
+
+      - name: Publish live snapshot files
+        run: python scripts/refresh_ga4_snapshot.py --from-json snapshot-refresh/ga4-snapshot.json --publish-live
+
+      - name: Commit live snapshot to main
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            data.js \
+            duration.js \
+            extensions.js \
+            magnetic.js \
+            refresh.js \
+            sources.js \
+            drivers-complete.js \
+            drivers-country-extra.js \
+            index.html \
+            chunks \
+            delta-*.js
+          if git diff --cached --name-only | grep -E '(snapshot-refresh|service.account|service_account|ga4-mcp-|ga4-sa-)'; then
+            echo "Refusing to commit credentials or the raw snapshot directory." >&2
+            exit 1
+          fi
+          if git diff --cached --quiet; then
+            echo "Live snapshot files were unchanged."
+            exit 0
+          fi
+          git commit -m "Refresh GA4 live snapshot"
+          git fetch origin main
+          git pull --rebase origin main
+          git push origin HEAD:main
