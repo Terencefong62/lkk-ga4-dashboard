@@ -2,3 +2,9 @@
 snapshot-refresh/
 __pycache__/
 *.pyc
+
+# Google service account keys. Never commit these.
+*service-account*.json
+*service_account*.json
+ga4-sa-*.json
+ga4-mcp-*.json
