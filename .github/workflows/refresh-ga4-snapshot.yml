@@ -1,0 +1,59 @@
+name: Refresh GA4 snapshot
+
+# Manual refresh only. The job writes a new JSON snapshot artifact and does
+# not replace the published dashboard JavaScript (data.js, chunks/, refresh.js,
+# and the other live snapshot files).
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: Inclusive start date (YYYY-MM-DD). Blank uses 1 January in Asia/Hong_Kong.
+        required: false
+        default: ""
+      end_date:
+        description: Inclusive end date (YYYY-MM-DD). Blank uses yesterday in Asia/Hong_Kong.
+        required: false
+        default: ""
+      property_ids:
+        description: Comma-separated GA4 property IDs. Blank reads every property the service account can access.
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ga4-snapshot-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out dashboard
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the official Google Analytics MCP server
+        run: pip install -r scripts/requirements-ga4-refresh.txt
+
+      - name: Refresh snapshot
+        env:
+          # The GitHub Actions secret must be named GA4_SERVICE_ACCOUNT_JSON
+          # and must contain the service account JSON. Do not commit that JSON.
+          GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+          GA4_START_DATE: ${{ inputs.start_date }}
+          GA4_END_DATE: ${{ inputs.end_date }}
+          GA4_PROPERTY_IDS: ${{ inputs.property_ids }}
+        run: python scripts/refresh_ga4_snapshot.py --out snapshot-refresh
+
+      - name: Upload snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ga4-snapshot
+          path: snapshot-refresh/ga4-snapshot.json
+          if-no-files-found: error

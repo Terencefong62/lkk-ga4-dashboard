@@ -1,0 +1,4 @@
+# Official Google Analytics MCP server.
+# https://github.com/googleanalytics/google-analytics-mcp
+# Console scripts: analytics-mcp and google-analytics-mcp.
+analytics-mcp==1.0.0
