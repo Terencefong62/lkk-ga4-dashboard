@@ -124,7 +124,7 @@
     </div>
   </section>
   <footer>
-    <div class="footer-source"><span>Source: Google Analytics 4 via connected Supermetrics account. Figures on this page apply the filters listed in Remarks.</span><span id="footer-sync"></span></div>
+    <div class="footer-source"><span>Source: Google Analytics 4 Data API for markets the connected service account can read. Markets it cannot read keep the previous published export. Figures on this page apply the filters listed in Remarks.</span><span id="footer-sync"></span></div>
     <div class="remarks">
       <h2>Remarks</h2>
       <ol>
@@ -142,15 +142,15 @@
     </div>
   </footer>
 </main>
-<script src="./data.js?v=20260904-ux2"></script>
-<script src="./duration.js?v=20260904-ux2"></script>
-<script src="./extensions.js?v=20260904-ux2"></script>
-<script src="./magnetic.js?v=20260904-ux2"></script>
-<script src="./refresh.js?v=20260904-ux2"></script>
-<script src="./sources.js?v=20260904-ux2"></script>
-<script src="./drivers-complete.js?v=20260904-ux2"></script>
-<script src="./drivers-country-extra.js?v=20260904-ux2"></script>
-<script src="./delta-2026-09-03.js?v=20260904-ux2"></script>
+<script src="./data.js?v=202611051526-ga4"></script>
+<script src="./duration.js?v=202611051526-ga4"></script>
+<script src="./extensions.js?v=202611051526-ga4"></script>
+<script src="./magnetic.js?v=202611051526-ga4"></script>
+<script src="./refresh.js?v=202611051526-ga4"></script>
+<script src="./sources.js?v=202611051526-ga4"></script>
+<script src="./drivers-complete.js?v=202611051526-ga4"></script>
+<script src="./drivers-country-extra.js?v=202611051526-ga4"></script>
+<script src="./delta-2026-09-03.js?v=202611051526-ga4"></script>
 <script>
   const D=window.GA4_DATA;
   const $=s=>document.querySelector(s), fmt=n=>new Intl.NumberFormat("en",{notation:n>=100000?"compact":"standard",maximumFractionDigits:1}).format(Math.round(n||0)),keyOf=d=>d.key||d.host,esc=s=>String(s??"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));

@@ -10,19 +10,24 @@ Credentials are read only from the ``GA4_SERVICE_ACCOUNT_JSON`` environment
 variable, which must be the service-account JSON itself. The script never
 reads a key file from the repo and never writes the key into the snapshot.
 
-Refreshed data is written under ``snapshot-refresh/`` as JSON. The published
-dashboard JavaScript (``data.js``, ``chunks/``, ``refresh.js``, and the other
-live snapshot files) is left unchanged.
+Refreshed data is written under ``snapshot-refresh/`` as JSON. Pass
+``--publish-live`` to also rewrite the dashboard JavaScript that index.html
+loads (``data.js``, ``duration.js``, ``sources.js``, ``drivers-complete.js``,
+the chunk files those loaders pull in, and the patch files that must not
+re-apply an older export). The service-account JSON is never written.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import base64
 import datetime as dt
 import json
 import os
+import re
 import stat
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -37,7 +42,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CATALOG_PATH = Path(__file__).resolve().parent / "ga4_domain_catalog.json"
 DEFAULT_OUT = REPO_ROOT / "snapshot-refresh"
 
-# Published files the dashboard loads. A refresh must not replace them.
+# The JSON writer must not drop a snapshot onto these paths. --publish-live
+# rewrites the same dashboard files on purpose, through write_live_snapshot.
 LIVE_SNAPSHOT_FILES = {
     "data.js",
     "duration.js",
@@ -49,6 +55,29 @@ LIVE_SNAPSHOT_FILES = {
     "drivers-country-extra.js",
     "index.html",
 }
+
+# Product and recipe cards show five rows. Keep each month's top paths, plus
+# the overall top paths, so a month or a year still has a real top five
+# without shipping every URL the API returns.
+CONTENT_MONTHLY_CAP = 20
+CONTENT_OVERALL_CAP = 20
+# Chunk external scripts the way the published site already does, once the
+# assignment is larger than a few hundred kilobytes.
+CHUNK_CHARS = 400_000
+DIRECT_JS_LIMIT = 300_000
+
+CHUNKED_GLOBALS = {
+    "data.js": ("__LKK_DATA_PARTS", "data"),
+    "sources.js": ("__LKK_SOURCES_PARTS", "sources"),
+    "drivers-complete.js": ("__LKK_DRIVERS_PARTS", "drivers-complete"),
+}
+
+NOOP_JS = (
+    "/* This patch file is loaded by index.html. The refresh job folds its\n"
+    "   data into the canonical snapshot files and leaves this script inert\n"
+    "   so an older export cannot overwrite the Google Analytics Data API pull.\n"
+    "*/\n"
+)
 
 DAILY_METRICS = [
     "sessions",
@@ -571,11 +600,558 @@ async def refresh(info: dict, start: str, end: str, only: set[str] | None, catal
     )
 
 
+def assert_no_credentials(payload: object) -> None:
+    """Reject snapshot documents that smuggle a service-account key."""
+    if isinstance(payload, (dict, list)):
+        blob = json.dumps(payload)
+    else:
+        blob = str(payload)
+    if "private_key" in blob or "BEGIN PRIVATE KEY" in blob or "BEGIN RSA PRIVATE KEY" in blob:
+        raise RefreshError("Refusing to write a snapshot that contains credential material.")
+
+
+def assert_snapshot_usable(snapshot: dict) -> None:
+    series = snapshot.get("series") or {}
+    if not isinstance(series, dict) or not series:
+        raise RefreshError("GA4 snapshot has no series. Refusing to continue.")
+    sessions = 0
+    for points in series.values():
+        if not isinstance(points, list):
+            continue
+        for point in points:
+            if isinstance(point, dict):
+                sessions += int(point.get("sessions") or 0)
+    if sessions <= 0:
+        raise RefreshError("GA4 snapshot series are empty. Refusing to continue.")
+
+
+def js_json(value: object) -> str:
+    text = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    return (
+        text.replace("<", "\\u003c")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
+
+
+def domain_key(domain: dict) -> str:
+    return str(domain.get("key") or domain.get("host") or "")
+
+
+def catalog_keys(catalog: dict[str, dict]) -> set[str]:
+    return set(catalog)
+
+
+def _parse_day(value: str) -> dt.date:
+    return dt.date.fromisoformat(value)
+
+
+def snapshot_window(snapshot: dict) -> tuple[str, str]:
+    start = str(snapshot.get("requestedStart") or snapshot.get("dataStart") or "")
+    end = str(snapshot.get("requestedEnd") or snapshot.get("dataEnd") or "")
+    if not start or not end:
+        raise RefreshError("GA4 snapshot is missing its date window.")
+    _parse_day(start)
+    _parse_day(end)
+    return start, end
+
+
+def _dated_metrics(body: dict, base: dt.date, label_field: str) -> dict[str, dict]:
+    labels = body.get(label_field) or []
+    grouped: dict[str, dict] = {}
+    for record in body.get("records") or []:
+        if len(record) < 3:
+            continue
+        date = (base + dt.timedelta(days=int(record[0]))).isoformat()
+        label = labels[int(record[1])]
+        if label_field == "paths":
+            label = tuple(label)
+        tail = list(record[2:])
+        bucket = grouped.setdefault(date, {})
+        current = bucket.get(label)
+        if current is None:
+            bucket[label] = tail
+        else:
+            width = max(len(current), len(tail))
+            padded_current = current + [0] * (width - len(current))
+            padded_tail = tail + [0] * (width - len(tail))
+            bucket[label] = [a + b for a, b in zip(padded_current, padded_tail)]
+    return grouped
+
+
+def _emit_metrics(grouped: dict[str, dict], base: dt.date, label_field: str) -> dict:
+    labels: list = []
+    index: dict = {}
+    records = []
+    for date in sorted(grouped):
+        day = (_parse_day(date) - base).days
+        for label in sorted(grouped[date], key=lambda item: json.dumps(item, ensure_ascii=False)):
+            if label not in index:
+                index[label] = len(labels)
+                labels.append(list(label) if label_field == "paths" else label)
+            records.append([day, index[label], *grouped[date][label]])
+    lengths = {len(record) for record in records}
+    if len(lengths) > 1:
+        width = min(lengths)
+        records = [record[:width] for record in records]
+    return {label_field: labels, "records": records}
+
+
+def merge_metric_body(
+    old: dict | None,
+    new: dict | None,
+    *,
+    old_base: dt.date,
+    new_base: dt.date,
+    merged_base: dt.date,
+    start: str,
+    end: str,
+    label_field: str,
+    replace_all: bool,
+) -> dict | None:
+    if replace_all:
+        source = new or old
+        if not source:
+            return None
+        grouped = _dated_metrics(source, new_base if new else old_base, label_field)
+        return _emit_metrics(grouped, merged_base, label_field)
+    grouped: dict[str, dict] = {}
+    if old:
+        grouped.update(_dated_metrics(old, old_base, label_field))
+    if new:
+        incoming = _dated_metrics(new, new_base, label_field)
+        for date in list(grouped):
+            if start <= date <= end:
+                grouped.pop(date, None)
+        grouped.update(incoming)
+    if not grouped:
+        return None
+    return _emit_metrics(grouped, merged_base, label_field)
+
+
+def merge_series(old_points: list | None, new_points: list | None, start: str, end: str, replace_all: bool) -> list:
+    if replace_all:
+        return list(new_points or old_points or [])
+    by_date = {point["date"]: point for point in (old_points or []) if isinstance(point, dict) and point.get("date")}
+    for date in list(by_date):
+        if start <= date <= end:
+            by_date.pop(date, None)
+    for point in new_points or []:
+        if isinstance(point, dict) and start <= str(point.get("date")) <= end:
+            by_date[point["date"]] = point
+    return [by_date[date] for date in sorted(by_date)]
+
+
+def merge_duration(old_rows: list | None, new_rows: list | None, start: str, end: str, replace_all: bool) -> list:
+    if replace_all:
+        return list(new_rows or old_rows or [])
+    by_date = {row[0]: row for row in (old_rows or []) if isinstance(row, list) and row}
+    for date in list(by_date):
+        if start <= date <= end:
+            by_date.pop(date, None)
+    for row in new_rows or []:
+        if isinstance(row, list) and row and start <= str(row[0]) <= end:
+            by_date[row[0]] = row
+    return [by_date[date] for date in sorted(by_date)]
+
+
+def cap_content_body(body: dict, base: dt.date) -> dict:
+    """Keep each month's top paths and the overall top paths."""
+    paths = body.get("paths") or []
+    records = body.get("records") or []
+    overall: dict[int, float] = {}
+    monthly: dict[tuple[int, int], dict[int, float]] = {}
+    for record in records:
+        if len(record) < 3:
+            continue
+        views = float(record[4] if len(record) >= 5 else record[2])
+        path_index = int(record[1])
+        overall[path_index] = overall.get(path_index, 0.0) + views
+        day = base + dt.timedelta(days=int(record[0]))
+        month = monthly.setdefault((day.year, day.month), {})
+        month[path_index] = month.get(path_index, 0.0) + views
+    chosen = set(sorted(overall, key=lambda index: overall[index], reverse=True)[:CONTENT_OVERALL_CAP])
+    for scores in monthly.values():
+        chosen.update(sorted(scores, key=lambda index: scores[index], reverse=True)[:CONTENT_MONTHLY_CAP])
+    remap: dict[int, int] = {}
+    new_paths = []
+    for index in sorted(chosen):
+        if index < 0 or index >= len(paths):
+            continue
+        remap[index] = len(new_paths)
+        new_paths.append(paths[index])
+    new_records = []
+    for record in records:
+        mapped = remap.get(int(record[1]))
+        if mapped is None:
+            continue
+        new_records.append([record[0], mapped, *record[2:]])
+    return {"paths": new_paths, "records": new_records}
+
+
+def cap_content_root(root: dict | None, base: dt.date) -> dict | None:
+    if not root:
+        return None
+    return {kind: cap_content_body(body, base) for kind, body in root.items() if isinstance(body, dict)}
+
+
+def trim_adjustments(adjustments: dict, key: str, start: str, end: str) -> None:
+    per_key = adjustments.get(key)
+    if not isinstance(per_key, dict):
+        return
+    for date in list(per_key):
+        if start <= str(date) <= end:
+            per_key.pop(date, None)
+    if not per_key:
+        adjustments.pop(key, None)
+
+
+def merge_live(published: dict, snapshot: dict, catalog: dict[str, dict]) -> dict:
+    """Overlay catalog markets from a GA4 pull onto the published snapshot.
+
+    Markets the service account cannot read keep their previous series, duration,
+    sources, drivers, content, and bot adjustments. Junk hostnames that are not
+    in the domain catalog are ignored.
+    """
+    data = published.get("data") or {}
+    if not data.get("domains") or not data.get("series"):
+        raise RefreshError("Published dashboard snapshot is missing domains or series.")
+    start, end = snapshot_window(snapshot)
+    published_start = str(data.get("dataStart") or start)
+    published_end = str(data.get("dataEnd") or end)
+    merged_start = min(published_start, str(snapshot.get("dataStart") or start), start)
+    merged_end = max(published_end, str(snapshot.get("dataEnd") or end), end)
+    replace_all = start <= published_start and end >= published_end
+    old_base = _parse_day(published_start)
+    new_base = _parse_day(start)
+    merged_base = _parse_day(merged_start)
+    known = catalog_keys(catalog)
+    fresh_series = snapshot.get("series") or {}
+    refreshed = sorted(key for key in fresh_series if key in known and fresh_series.get(key))
+    if not refreshed:
+        raise RefreshError(
+            "No catalog markets were present in the GA4 snapshot. "
+            "Refusing to publish an empty dashboard."
+        )
+
+    domains = [dict(domain) for domain in data["domains"]]
+    present = {domain_key(domain) for domain in domains}
+    snapshot_domains = {domain_key(domain): domain for domain in snapshot.get("domains") or []}
+    for key in refreshed:
+        if key not in present and key in snapshot_domains:
+            domains.append(dict(snapshot_domains[key]))
+            present.add(key)
+
+    series = {key: list(points) for key, points in (data.get("series") or {}).items()}
+    duration = {key: list(rows) for key, rows in (published.get("duration") or {}).items()}
+    sources = {key: value for key, value in (published.get("sources") or {}).items()}
+    drivers = {key: value for key, value in (published.get("drivers") or {}).items()}
+    content = {key: value for key, value in (data.get("content") or {}).items()}
+    adjustments = json.loads(json.dumps(published.get("botAdjustments") or {}))
+
+    for key in refreshed:
+        series[key] = merge_series(series.get(key), fresh_series.get(key), start, end, replace_all)
+        if not series[key]:
+            raise RefreshError(f"Refusing to publish {key} with an empty series.")
+        if key in sources and not (snapshot.get("sources") or {}).get(key):
+            raise RefreshError(f"{key} has no source breakdown in the GA4 pull.")
+        duration[key] = merge_duration(
+            duration.get(key),
+            (snapshot.get("duration") or {}).get(key),
+            start,
+            end,
+            replace_all,
+        )
+        merged_source = merge_metric_body(
+            sources.get(key),
+            (snapshot.get("sources") or {}).get(key),
+            old_base=old_base,
+            new_base=new_base,
+            merged_base=merged_base,
+            start=start,
+            end=end,
+            label_field="sources",
+            replace_all=replace_all,
+        )
+        if merged_source:
+            sources[key] = merged_source
+        old_driver = drivers.get(key) or {}
+        new_driver = (snapshot.get("drivers") or {}).get(key) or {}
+        kinds = set(old_driver) | set(new_driver)
+        driver_root = {}
+        for kind in sorted(kinds):
+            merged_kind = merge_metric_body(
+                old_driver.get(kind),
+                new_driver.get(kind),
+                old_base=old_base,
+                new_base=new_base,
+                merged_base=merged_base,
+                start=start,
+                end=end,
+                label_field="labels",
+                replace_all=replace_all,
+            )
+            if merged_kind:
+                driver_root[kind] = merged_kind
+        if driver_root:
+            drivers[key] = driver_root
+        old_content = content.get(key) or {}
+        new_content = (snapshot.get("content") or {}).get(key) or {}
+        content_root = {}
+        for kind in sorted(set(old_content) | set(new_content)):
+            merged_kind = merge_metric_body(
+                old_content.get(kind),
+                new_content.get(kind),
+                old_base=old_base,
+                new_base=new_base,
+                merged_base=merged_base,
+                start=start,
+                end=end,
+                label_field="paths",
+                replace_all=replace_all,
+            )
+            if merged_kind:
+                content_root[kind] = merged_kind
+        capped = cap_content_root(content_root, merged_base)
+        if capped:
+            content[key] = capped
+        trim_adjustments(adjustments, key, start, end)
+
+    for domain in domains:
+        key = domain_key(domain)
+        if key not in series or not series[key]:
+            raise RefreshError(f"Refusing to publish without series for {key}.")
+
+    merged_data = {
+        "refreshedAt": snapshot.get("refreshedAt") or data.get("refreshedAt"),
+        "timezone": snapshot.get("timezone") or data.get("timezone") or TIMEZONE,
+        "dataStart": merged_start,
+        "dataEnd": merged_end,
+        "domains": domains,
+        "series": series,
+        "content": content,
+    }
+    return {
+        "data": merged_data,
+        "duration": duration,
+        "sources": sources,
+        "drivers": drivers,
+        "botAdjustments": adjustments,
+        "refreshedKeys": refreshed,
+    }
+
+
+def load_published_snapshot(repo_root: Path = REPO_ROOT) -> dict:
+    """Execute the live script chain index.html loads."""
+    script = Path(__file__).resolve().parent / "read_live_snapshot.mjs"
+    if not script.is_file():
+        raise RefreshError(f"Missing {script.name}.")
+    handle = tempfile.NamedTemporaryFile(prefix="ga4-published-", suffix=".json", delete=False)
+    handle.close()
+    out_path = Path(handle.name)
+    try:
+        completed = subprocess.run(
+            ["node", str(script), str(repo_root), str(out_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            detail = (completed.stderr or completed.stdout or "").strip()
+            raise RefreshError(f"Could not read the published snapshot. {detail}")
+        if completed.stdout.strip():
+            print(completed.stdout.strip(), flush=True)
+        payload = json.loads(out_path.read_text(encoding="utf-8"))
+    finally:
+        out_path.unlink(missing_ok=True)
+    assert_no_credentials(payload)
+    return payload
+
+
+def _snapshot_scripts(index_text: str) -> list[str]:
+    return re.findall(r'<script src="\./([^"?]+\.js)', index_text)
+
+
+def _safe_repo_js(repo_root: Path, relative: str) -> Path:
+    repo = repo_root.resolve()
+    path = (repo / relative).resolve()
+    if not path.is_relative_to(repo):
+        raise RefreshError(f"Refusing to write outside the repo: {relative}")
+    name = path.name.lower()
+    if path.suffix != ".js":
+        raise RefreshError(f"Refusing to write non-JavaScript snapshot path {relative}.")
+    if "service" in name and "account" in name:
+        raise RefreshError("Refusing to write a service-account file.")
+    if name.startswith("ga4-mcp") or name.startswith("ga4-sa-") or name.endswith(".json"):
+        raise RefreshError("Refusing to write a credential or raw snapshot file.")
+    return path
+
+
+def _assignment_js(global_name: str, value: object) -> str:
+    return f"window.{global_name}={js_json(value)};\n"
+
+
+def _write_chunked(repo_root: Path, script_name: str, source: str) -> None:
+    parts_name, prefix = CHUNKED_GLOBALS[script_name]
+    encoded = base64.b64encode(source.encode("utf-8")).decode("ascii")
+    chunks = [encoded[index : index + CHUNK_CHARS] for index in range(0, len(encoded), CHUNK_CHARS)] or [""]
+    chunk_dir = _safe_repo_js(repo_root, "chunks/keep.js").parent
+    chunk_dir.mkdir(parents=True, exist_ok=True)
+    for stale in chunk_dir.glob(f"{prefix}-*.js"):
+        stale.unlink()
+    tags = []
+    for index, chunk in enumerate(chunks):
+        relative = f"chunks/{prefix}-{index}.js"
+        _safe_repo_js(repo_root, relative).write_text(
+            f'window.{parts_name}.push("{chunk}");\n',
+            encoding="utf-8",
+        )
+        tags.append(f'<script src="./{relative}"><\\/script>')
+    final = f"chunks/{prefix}-final.js"
+    _safe_repo_js(repo_root, final).write_text(
+        "(()=>{const b=atob(window."
+        + parts_name
+        + '.join(""));const u=Uint8Array.from(b,c=>c.charCodeAt(0));'
+        + "(0,eval)(new TextDecoder().decode(u));delete window."
+        + parts_name
+        + "})();\n",
+        encoding="utf-8",
+    )
+    tags.append(f'<script src="./{final}"><\\/script>')
+    loader = f"window.{parts_name}=[];document.write('{''.join(tags)}');\n"
+    _safe_repo_js(repo_root, script_name).write_text(loader, encoding="utf-8")
+
+
+def _write_global(repo_root: Path, script_name: str, global_name: str, value: object) -> None:
+    source = _assignment_js(global_name, value)
+    assert_no_credentials(source)
+    if script_name in CHUNKED_GLOBALS and len(source) > DIRECT_JS_LIMIT:
+        _write_chunked(repo_root, script_name, source)
+        return
+    if script_name in CHUNKED_GLOBALS:
+        prefix = CHUNKED_GLOBALS[script_name][1]
+        chunk_dir = repo_root / "chunks"
+        if chunk_dir.is_dir():
+            for stale in chunk_dir.glob(f"{prefix}-*.js"):
+                stale.unlink()
+    _safe_repo_js(repo_root, script_name).write_text(source, encoding="utf-8")
+
+
+def _bump_cache(index_text: str, token: str) -> str:
+    pattern = re.compile(
+        r'(src="\./(?:data|duration|extensions|magnetic|refresh|sources|'
+        r'drivers-complete|drivers-country-extra|delta-[\d-]+)\.js)\?v=[^"]*"'
+    )
+    updated, count = pattern.subn(lambda match: f'{match.group(1)}?v={token}"', index_text)
+    if count < 8:
+        raise RefreshError("index.html snapshot script tags could not be cache-busted.")
+    return updated
+
+
+def _cache_token(snapshot: dict) -> str:
+    digits = re.sub(r"[^0-9]", "", str(snapshot.get("refreshedAt") or ""))[:12]
+    return f"{digits or 'ga4'}-ga4"
+
+
+def write_live_snapshot(repo_root: Path, bundle: dict, snapshot: dict) -> list[str]:
+    """Rewrite the files index.html loads. Returns the relative paths written."""
+    index_path = repo_root / "index.html"
+    index_text = index_path.read_text(encoding="utf-8")
+    scripts = _snapshot_scripts(index_text)
+    if "data.js" not in scripts or "sources.js" not in scripts or "drivers-complete.js" not in scripts:
+        raise RefreshError("index.html is not loading the live snapshot scripts.")
+    written = []
+    globals_for = {
+        "data.js": ("GA4_DATA", bundle["data"]),
+        "duration.js": ("GA4_DURATION", bundle["duration"]),
+        "sources.js": ("GA4_SOURCE_DATA", bundle["sources"]),
+        "drivers-complete.js": ("GA4_DRIVER_COMPLETE", bundle["drivers"]),
+        "extensions.js": ("GA4_BOT_ADJUSTMENTS", bundle["botAdjustments"]),
+    }
+    for name in scripts:
+        if name in globals_for:
+            global_name, value = globals_for[name]
+            _write_global(repo_root, name, global_name, value)
+        elif name == "index.html":
+            continue
+        else:
+            _safe_repo_js(repo_root, name).write_text(NOOP_JS, encoding="utf-8")
+        written.append(name)
+    token = _cache_token(snapshot)
+    index_path.write_text(_bump_cache(index_text, token), encoding="utf-8")
+    written.append("index.html")
+    for name in written:
+        text = (repo_root / name).read_text(encoding="utf-8")
+        if "private_key" in text or "BEGIN PRIVATE KEY" in text:
+            raise RefreshError(f"Refusing to leave credential material in {name}.")
+    return written
+
+
+def _series_rows(series: dict) -> dict[str, list[tuple]]:
+    rows = {}
+    for key, points in series.items():
+        rows[key] = [
+            (point.get("date"), point.get("sessions"), point.get("users"), point.get("views"))
+            for point in points
+        ]
+    return rows
+
+
+def verify_published(repo_root: Path, bundle: dict) -> None:
+    loaded = load_published_snapshot(repo_root)
+    expected = bundle["data"]
+    actual = loaded["data"]
+    if expected["dataStart"] != actual["dataStart"] or expected["dataEnd"] != actual["dataEnd"]:
+        raise RefreshError("Published snapshot window does not match the generated files.")
+    expected_domains = [(domain_key(domain), domain.get("label")) for domain in expected["domains"]]
+    actual_domains = [(domain_key(domain), domain.get("label")) for domain in actual["domains"]]
+    if expected_domains != actual_domains:
+        raise RefreshError("Published domains do not match the generated snapshot.")
+    if _series_rows(expected["series"]) != _series_rows(actual["series"]):
+        raise RefreshError("Published series do not match the generated snapshot.")
+    for key in bundle["refreshedKeys"]:
+        points = actual["series"].get(key) or []
+        if not points or not any(point.get("sessions") or point.get("views") for point in points):
+            raise RefreshError(f"Generated series for {key} is empty.")
+    index_text = (repo_root / "index.html").read_text(encoding="utf-8")
+    for name in ("data.js", "duration.js", "sources.js", "drivers-complete.js", "refresh.js"):
+        if f"./{name}" not in index_text:
+            raise RefreshError(f"index.html no longer references {name}.")
+
+
+def publish_live(repo_root: Path, snapshot: dict, catalog: dict[str, dict]) -> dict:
+    assert_no_credentials(snapshot)
+    assert_snapshot_usable(snapshot)
+    published = load_published_snapshot(repo_root)
+    before = len((published.get("data") or {}).get("domains") or [])
+    bundle = merge_live(published, snapshot, catalog)
+    after = len(bundle["data"]["domains"])
+    if after < before:
+        raise RefreshError(
+            f"Refusing to publish a snapshot that drops markets ({before} domains to {after})."
+        )
+    if len(bundle["refreshedKeys"]) * 2 < before and after == len(bundle["refreshedKeys"]):
+        raise RefreshError("Refusing to publish a snapshot that drops most markets.")
+    write_live_snapshot(repo_root, bundle, snapshot)
+    verify_published(repo_root, bundle)
+    print(
+        f"Published {after} domains; refreshed {len(bundle['refreshedKeys'])} catalog markets "
+        f"({bundle['data']['dataStart']} to {bundle['data']['dataEnd']}). "
+        f"Content lists keep each month's top {CONTENT_MONTHLY_CAP} paths.",
+        flush=True,
+    )
+    return bundle
+
+
 def write_snapshot(out_dir: Path, snapshot: dict) -> Path:
+    assert_snapshot_usable(snapshot)
+    assert_no_credentials(snapshot)
     out_dir.mkdir(parents=True, exist_ok=True)
     target = out_dir / "ga4-snapshot.json"
-    if target.name in LIVE_SNAPSHOT_FILES:
+    if target.name in LIVE_SNAPSHOT_FILES or target.suffix == ".js":
         raise RefreshError("Refusing to overwrite live snapshot JavaScript.")
+    if "service" in target.name.lower() and "account" in target.name.lower():
+        raise RefreshError("Refusing to write a service-account file.")
     target.write_text(json.dumps(snapshot, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"Wrote {target} ({target.stat().st_size} bytes).", flush=True)
     return target
@@ -595,19 +1171,49 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=os.environ.get("GA4_PROPERTY_IDS", ""),
         help="Comma-separated GA4 property IDs. Default: every property the service account can read.",
     )
+    parser.add_argument(
+        "--from-json",
+        default="",
+        help="Reuse an existing snapshot JSON instead of calling GA4. The file is not copied into the repo.",
+    )
+    parser.add_argument(
+        "--publish-live",
+        action="store_true",
+        help="Rewrite the live dashboard JavaScript from this snapshot.",
+    )
     return parser.parse_args(argv)
+
+
+def load_snapshot_json(path: Path) -> dict:
+    if not path.is_file():
+        raise RefreshError(f"Snapshot JSON not found: {path.name}.")
+    text = path.read_text(encoding="utf-8")
+    assert_no_credentials(text)
+    try:
+        snapshot = json.loads(text)
+    except json.JSONDecodeError:
+        raise RefreshError("Snapshot JSON is not valid JSON.") from None
+    if not isinstance(snapshot, dict):
+        raise RefreshError("Snapshot JSON must be an object.")
+    assert_snapshot_usable(snapshot)
+    return snapshot
 
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv if argv is not None else sys.argv[1:])
-    out_dir = assert_safe_output(Path(args.out))
-    start, end = resolve_dates(args.start, args.end)
-    only = {part.strip() for part in args.property_ids.split(",") if part.strip()} or None
-    info = parse_service_account(os.environ.get(SECRET_ENV))
     catalog = load_catalog()
-    with ServiceAccountCredentials(info):
-        snapshot = asyncio.run(refresh(info, start, end, only, catalog))
-    write_snapshot(out_dir, snapshot)
+    if args.from_json:
+        snapshot = load_snapshot_json(Path(args.from_json))
+    else:
+        out_dir = assert_safe_output(Path(args.out))
+        start, end = resolve_dates(args.start, args.end)
+        only = {part.strip() for part in args.property_ids.split(",") if part.strip()} or None
+        info = parse_service_account(os.environ.get(SECRET_ENV))
+        with ServiceAccountCredentials(info):
+            snapshot = asyncio.run(refresh(info, start, end, only, catalog))
+        write_snapshot(out_dir, snapshot)
+    if args.publish_live:
+        publish_live(REPO_ROOT, snapshot, catalog)
 
 
 if __name__ == "__main__":

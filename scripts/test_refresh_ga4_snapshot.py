@@ -188,17 +188,195 @@ class RefreshTests(unittest.TestCase):
         with self.assertRaises(refresh.RefreshError):
             refresh.properties_from_summaries(summaries, {"99"})
 
-    def test_workflow_uses_secret_and_does_not_publish_live_js(self):
+    def test_workflow_publishes_live_snapshot_without_credentials(self):
         workflow = (ROOT / ".github" / "workflows" / "refresh-ga4-snapshot.yml").read_text(encoding="utf-8")
         self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("schedule:", workflow)
+        self.assertIn("0 0 * * *", workflow)
+        self.assertIn("contents: write", workflow)
+        self.assertIn("group: ga4-snapshot-refresh", workflow)
+        self.assertIn("cancel-in-progress: false", workflow)
         self.assertIn("GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}", workflow)
+        self.assertIn("--publish-live", workflow)
+        self.assertIn("git commit", workflow)
+        self.assertIn("git push origin HEAD:main", workflow)
+        self.assertNotIn("private_key", workflow)
+        self.assertNotIn("BEGIN PRIVATE", workflow)
+        self.assertIn("snapshot-refresh/ga4-snapshot.json", workflow)
         requirements = (ROOT / "scripts" / "requirements-ga4-refresh.txt").read_text(encoding="utf-8")
         self.assertIn("analytics-mcp==1.0.0", requirements)
-        self.assertIn("snapshot-refresh", workflow)
-        self.assertNotIn("private_key", workflow)
-        self.assertNotIn("git commit", workflow)
-        self.assertNotIn("git push", workflow)
-        self.assertIn("snapshot-refresh/ga4-snapshot.json", workflow)
+
+    def test_merge_keeps_markets_the_pull_cannot_read(self):
+        catalog = {
+            "hk.lkk.com": {"key": "hk.lkk.com", "host": "hk.lkk.com", "label": "Hong Kong"},
+            "usa.lkk.com": {"key": "usa.lkk.com", "host": "usa.lkk.com", "label": "United States"},
+        }
+        published = {
+            "data": {
+                "refreshedAt": "2026-09-04T10:03:00+08:00",
+                "timezone": "Asia/Hong_Kong",
+                "dataStart": "2026-01-01",
+                "dataEnd": "2026-09-03",
+                "domains": [
+                    {"host": "hk.lkk.com", "label": "Hong Kong"},
+                    {"host": "usa.lkk.com", "label": "United States"},
+                ],
+                "series": {
+                    "hk.lkk.com": [{"date": "2026-01-01", "sessions": 1, "users": 1, "views": 1}],
+                    "usa.lkk.com": [{"date": "2026-09-03", "sessions": 9, "users": 8, "views": 7}],
+                },
+                "content": {
+                    "usa.lkk.com": {
+                        "product": {"paths": [["/en/products/x", "X"]], "records": [[245, 0, 4]]}
+                    }
+                },
+            },
+            "duration": {"usa.lkk.com": [["2026-09-03", 12.5]], "hk.lkk.com": [["2026-01-01", 3]]},
+            "sources": {
+                "hk.lkk.com": {"sources": ["old / cpc"], "records": [[0, 0, 1, 1, 1, 0]]},
+                "usa.lkk.com": {"sources": ["google / organic"], "records": [[245, 0, 9, 8, 7, 20]]},
+            },
+            "drivers": {
+                "usa.lkk.com": {"country": {"labels": ["China"], "records": [[245, 0, 3]]}},
+            },
+            "botAdjustments": {
+                "hk.lkk.com": {"2026-01-01": [1, 1, 0, 0]},
+                "usa.lkk.com": {"2026-09-03": [2, 2, 1, 0]},
+            },
+        }
+        snapshot = {
+            "refreshedAt": "2026-11-05T15:26:31+08:00",
+            "timezone": "Asia/Hong_Kong",
+            "dataStart": "2026-01-01",
+            "dataEnd": "2026-11-04",
+            "requestedStart": "2026-01-01",
+            "requestedEnd": "2026-11-04",
+            "domains": [
+                {"host": "hk.lkk.com", "label": "Hong Kong"},
+                {"host": "spam.example", "label": "spam.example"},
+            ],
+            "series": {
+                "hk.lkk.com": [
+                    {"date": "2026-01-01", "sessions": 10, "users": 8, "views": 12},
+                    {"date": "2026-11-04", "sessions": 4, "users": 3, "views": 5},
+                ],
+                "spam.example": [{"date": "2026-08-13", "sessions": 99, "users": 99, "views": 99}],
+            },
+            "duration": {"hk.lkk.com": [["2026-01-01", 8.5], ["2026-11-04", 9]]},
+            "sources": {
+                "hk.lkk.com": {"sources": ["google / organic"], "records": [[0, 0, 10, 8, 12, 85], [307, 0, 4, 3, 5, 36]]}
+            },
+            "drivers": {
+                "hk.lkk.com": {"country": {"labels": ["Hong Kong"], "records": [[0, 0, 10, 8, 12]]}}
+            },
+            "content": {
+                "hk.lkk.com": {
+                    "product": {
+                        "paths": [[f"/en/products/{i}", f"P{i}"] for i in range(40)],
+                        "records": [[0, i, 1, 1, 40 - i] for i in range(40)],
+                    }
+                }
+            },
+        }
+        merged = refresh.merge_live(published, snapshot, catalog)
+        self.assertEqual([refresh.domain_key(d) for d in merged["data"]["domains"]], ["hk.lkk.com", "usa.lkk.com"])
+        self.assertEqual(merged["data"]["series"]["hk.lkk.com"][0]["sessions"], 10)
+        self.assertEqual(merged["data"]["series"]["hk.lkk.com"][-1]["date"], "2026-11-04")
+        self.assertEqual(merged["data"]["series"]["usa.lkk.com"][0]["sessions"], 9)
+        self.assertNotIn("spam.example", merged["data"]["series"])
+        self.assertEqual(merged["data"]["dataEnd"], "2026-11-04")
+        self.assertIn("usa.lkk.com", merged["sources"])
+        self.assertEqual(merged["sources"]["hk.lkk.com"]["sources"], ["google / organic"])
+        self.assertNotIn("hk.lkk.com", merged["botAdjustments"])
+        self.assertIn("usa.lkk.com", merged["botAdjustments"])
+        self.assertLessEqual(len(merged["data"]["content"]["hk.lkk.com"]["product"]["paths"]), 20)
+        self.assertEqual(merged["data"]["content"]["usa.lkk.com"]["product"]["records"], [[245, 0, 4]])
+        with self.assertRaises(refresh.RefreshError):
+            refresh.merge_live(published, {**snapshot, "series": {"spam.example": snapshot["series"]["spam.example"]}}, catalog)
+
+    def test_publish_refuses_credential_material_and_live_json_path(self):
+        with self.assertRaises(refresh.RefreshError):
+            refresh.assert_no_credentials({"private_key": "secret"})
+        with self.assertRaises(refresh.RefreshError):
+            refresh.assert_snapshot_usable({"series": {}})
+        with tempfile.TemporaryDirectory() as tmp:
+            outside = Path(tmp)
+            with self.assertRaises(refresh.RefreshError):
+                refresh._safe_repo_js(ROOT, "../ga4-mcp-secret.js")
+            self.assertFalse((outside / "ga4-mcp-secret.js").exists())
+
+    def test_live_writer_roundtrip_preserves_dashboard_shape(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            (repo / "chunks").mkdir()
+            index = """<!doctype html><script src="./data.js?v=old"></script>
+<script src="./duration.js?v=old"></script>
+<script src="./extensions.js?v=old"></script>
+<script src="./magnetic.js?v=old"></script>
+<script src="./refresh.js?v=old"></script>
+<script src="./sources.js?v=old"></script>
+<script src="./drivers-complete.js?v=old"></script>
+<script src="./drivers-country-extra.js?v=old"></script>
+<script src="./delta-2026-09-03.js?v=old"></script>
+"""
+            (repo / "index.html").write_text(index, encoding="utf-8")
+            published = {
+                "data": {
+                    "refreshedAt": "2026-09-04T10:03:00+08:00",
+                    "timezone": "Asia/Hong_Kong",
+                    "dataStart": "2026-01-01",
+                    "dataEnd": "2026-09-03",
+                    "domains": [
+                        {"host": "hk.lkk.com", "label": "Hong Kong"},
+                        {"key": "gawa:1", "host": "uk.lkk.com", "label": "United Kingdom"},
+                    ],
+                    "series": {
+                        "hk.lkk.com": [{"date": "2026-01-01", "sessions": 1, "users": 1, "views": 2}],
+                        "gawa:1": [{"date": "2026-09-03", "sessions": 5, "users": 4, "views": 6}],
+                    },
+                    "content": {},
+                },
+                "duration": {"gawa:1": [["2026-09-03", 10]]},
+                "sources": {
+                    "hk.lkk.com": {"sources": ["old"], "records": [[0, 0, 1, 1, 2, 0]]},
+                    "gawa:1": {"sources": ["direct"], "records": [[245, 0, 5, 4, 6, 50]]},
+                },
+                "drivers": {"gawa:1": {"device": {"labels": ["desktop"], "records": [[245, 0, 5]]}}},
+                "botAdjustments": {"gawa:1": {"2026-09-03": [1, 1, 0, 0]}},
+            }
+            snapshot = {
+                "refreshedAt": "2026-11-05T15:26:31+08:00",
+                "timezone": "Asia/Hong_Kong",
+                "dataStart": "2026-01-01",
+                "dataEnd": "2026-01-02",
+                "requestedStart": "2026-01-01",
+                "requestedEnd": "2026-11-04",
+                "series": {
+                    "hk.lkk.com": [
+                        {"date": "2026-01-01", "sessions": 3, "users": 2, "views": 4},
+                        {"date": "2026-11-04", "sessions": 8, "users": 7, "views": 9},
+                    ]
+                },
+                "duration": {"hk.lkk.com": [["2026-11-04", 11.5]]},
+                "sources": {"hk.lkk.com": {"sources": ["google / organic"], "records": [[307, 0, 8, 7, 9, 92]]}},
+                "drivers": {"hk.lkk.com": {"country": {"labels": ["China"], "records": [[307, 0, 8, 7, 9]]}}},
+                "content": {"hk.lkk.com": {"recipe": {"paths": [["/en/recipe/x", "X"]], "records": [[307, 0, 1, 1, 2]]}}},
+                "domains": [{"host": "hk.lkk.com", "label": "Hong Kong"}],
+            }
+            catalog = {"hk.lkk.com": {"label": "Hong Kong"}, "gawa:1": {"label": "United Kingdom"}}
+            bundle = refresh.merge_live(published, snapshot, catalog)
+            # Seed the temp repo with the previous published files, then publish over them.
+            refresh.write_live_snapshot(repo, published | {"refreshedKeys": []}, snapshot)
+            # write_live of the previous bundle used snapshot's cache token; rewrite via publish path.
+            refresh.write_live_snapshot(repo, bundle, snapshot)
+            refresh.verify_published(repo, bundle)
+            text = (repo / "index.html").read_text(encoding="utf-8")
+            self.assertIn("./data.js?v=202611051526-ga4", text)
+            self.assertIn("./delta-2026-09-03.js", text)
+            self.assertNotIn("private_key", (repo / "data.js").read_text(encoding="utf-8"))
+            loaded = refresh.load_published_snapshot(repo)
+            self.assertEqual(loaded["data"]["series"]["gawa:1"][0]["sessions"], 5)
+            self.assertEqual(loaded["data"]["series"]["hk.lkk.com"][-1]["sessions"], 8)
 
 
 if __name__ == "__main__":
