@@ -451,8 +451,46 @@
     $(id).innerHTML='<span class="kpi-split-label">Returning vs. New</span> <span class="kpi-split-value">'+formatUserSplit(split)+"</span>";
   }
   const refreshedAtUtc=(()=>{const raw=D.refreshedAt;if(!raw)return"";const parsed=new Date(raw);return Number.isNaN(parsed.getTime())?"":parsed.toISOString()})();
-  function refreshClock(instant,timeZone){const opts={day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true};if(timeZone)opts.timeZone=timeZone;const parts=new Intl.DateTimeFormat("en-GB",opts).formatToParts(instant),pick=type=>(parts.find(part=>part.type===type)||{}).value||"",period=(pick("dayPeriod")||"").toUpperCase();return pick("day")+" "+pick("month")+" "+pick("year")+", "+pick("hour")+":"+pick("minute")+(period?" "+period:"")}
-  function paintRefreshLine(){const el=$("#refreshed-at");if(!el)return;el.replaceChildren();if(!refreshedAtUtc)return;const instant=new Date(refreshedAtUtc),add=(text,timed)=>{const node=document.createElement(timed?"time":"span");node.className="refreshed-line";if(timed)node.dateTime=refreshedAtUtc;node.textContent=text;el.appendChild(node)};add("Refreshed at:",false);add(refreshClock(instant)+" local time",true);add(refreshClock(instant,"Asia/Hong_Kong")+" (HKT)",true)}
+  const HKT_ZONE="Asia/Hong_Kong";
+  const marketTimeZones={
+    [TOTAL_KEY]:HKT_ZONE,
+    "corporate.lkk.com":HKT_ZONE,
+    "hk.lkk.com":HKT_ZONE,
+    "usa.lkk.com":"America/Los_Angeles",
+    "malaysia.lkk.com":"Asia/Kuala_Lumpur",
+    "ca.lkk.com":"America/Toronto",
+    "tw.lkk.com":"Asia/Taipei",
+    "au.lkk.com":"Australia/Sydney",
+    "sg.lkk.com":"Asia/Singapore",
+    "kr.lkk.com":"Asia/Seoul",
+    "csa.lkk.com":HKT_ZONE,
+    "id.lkk.com":"Asia/Jakarta",
+    "eu.lkk.com":HKT_ZONE,
+    "nz.lkk.com":"Pacific/Auckland",
+    "jp.lkk.com":"Asia/Tokyo",
+    "ph.lkk.com":"Asia/Manila",
+    "in.lkk.com":"Asia/Kolkata",
+    "vn.lkk.com":"Asia/Ho_Chi_Minh",
+    "gawa:259299200":"Europe/London",
+    "gawa:270258410":"Europe/Berlin",
+    "gawa:274757322":"Europe/London",
+    "gawa:359131146":"Europe/Athens",
+    "gawa:359138868":"Europe/Amsterdam",
+    "gawa:359140744":"Europe/Berlin",
+    "gawa:359143062":"Europe/Amsterdam",
+    "gawa:359143969":HKT_ZONE,
+    "gawa:359148543":"Europe/Warsaw",
+    "gawa:359149333":"Europe/Madrid",
+    "gawa:359151329":"Europe/Prague",
+    "gawa:359159762":"Europe/London",
+    "gawa:359359758":"Europe/Paris",
+    "gawa:435274171":"Europe/London",
+    "gawa:482136493":"Europe/Sofia",
+    "gawa:507647134":"Europe/Lisbon"
+  };
+  function marketTimeZone(key){return marketTimeZones[key]||HKT_ZONE}
+  function refreshClock(instant,timeZone){const opts={day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit",hour12:true,timeZone:timeZone||HKT_ZONE};const parts=new Intl.DateTimeFormat("en-GB",opts).formatToParts(instant),pick=type=>(parts.find(part=>part.type===type)||{}).value||"",period=(pick("dayPeriod")||"").toUpperCase();return pick("day")+" "+pick("month")+" "+pick("year")+", "+pick("hour")+":"+pick("minute")+(period?" "+period:"")}
+  function paintRefreshLine(){const el=$("#refreshed-at");if(!el)return;el.replaceChildren();if(!refreshedAtUtc)return;const instant=new Date(refreshedAtUtc),add=(text,timed)=>{const node=document.createElement(timed?"time":"span");node.className="refreshed-line";if(timed)node.dateTime=refreshedAtUtc;node.textContent=text;el.appendChild(node)};add("Refreshed at:",false);add(refreshClock(instant,marketTimeZone(state.host))+" local time",true);add(refreshClock(instant,HKT_ZONE)+" (HKT)",true)}
   function render(){
     paintRefreshLine();
     const domain=resolveDomain(state.host),ready=domain&&state.start&&state.end;
