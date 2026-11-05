@@ -3,14 +3,10 @@ name: Refresh GA4 snapshot
 # Manual refresh only. The job writes a new JSON snapshot artifact and does
 # not replace the published dashboard JavaScript (data.js, chunks/, refresh.js,
 # and the other live snapshot files).
-
 on:
   schedule:
-    # 08:00 Asia/Shanghai, every day (GitHub schedules use UTC)
+      # 08:00 Asia/Shanghai, every day (GitHub schedules use UTC)
     - cron: '0 0 * * *'
-  workflow_dispatch:
-
-on:
   workflow_dispatch:
     inputs:
       start_date:
