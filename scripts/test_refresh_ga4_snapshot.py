@@ -147,6 +147,7 @@ class RefreshTests(unittest.TestCase):
         )
         self.assertEqual(snapshot["mcpServer"], "analytics-mcp")
         self.assertEqual(snapshot["timezone"], "Asia/Hong_Kong")
+        self.assertEqual(snapshot["refreshedAt"], "2026-11-05T04:00:00Z")
         self.assertEqual(snapshot["series"]["gawa:259299200"][0]["sessions"], 10)
         self.assertEqual(snapshot["series"]["gawa:259299200"][0]["views"], 25)
         self.assertEqual(snapshot["duration"]["gawa:259299200"], [["2026-01-02", 12.5]])
@@ -279,6 +280,7 @@ class RefreshTests(unittest.TestCase):
             },
         }
         merged = refresh.merge_live(published, snapshot, catalog)
+        self.assertEqual(merged["data"]["refreshedAt"], "2026-11-05T07:26:31Z")
         self.assertEqual([refresh.domain_key(d) for d in merged["data"]["domains"]], ["hk.lkk.com", "usa.lkk.com"])
         self.assertEqual(merged["data"]["series"]["hk.lkk.com"][0]["sessions"], 10)
         self.assertEqual(merged["data"]["series"]["hk.lkk.com"][-1]["date"], "2026-11-04")
@@ -377,6 +379,27 @@ class RefreshTests(unittest.TestCase):
             loaded = refresh.load_published_snapshot(repo)
             self.assertEqual(loaded["data"]["series"]["gawa:1"][0]["sessions"], 5)
             self.assertEqual(loaded["data"]["series"]["hk.lkk.com"][-1]["sessions"], 8)
+            self.assertEqual(loaded["data"]["refreshedAt"], "2026-11-05T07:26:31Z")
+
+    def test_refresh_instant_is_utc_and_dashboard_reads_it(self):
+        self.assertEqual(refresh.as_utc_iso("2026-11-05T15:26:31+08:00"), "2026-11-05T07:26:31Z")
+        self.assertEqual(refresh.as_utc_iso("2026-11-05T08:00:00Z"), "2026-11-05T08:00:00Z")
+        self.assertEqual(refresh.as_utc_iso("2026-11-05T08:00:00+00:00"), "2026-11-05T08:00:00Z")
+        self.assertEqual(refresh.as_utc_iso(""), "")
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        title_at = html.find('id="chart-title"')
+        refresh_at = html.find('id="refreshed-at"')
+        stamp_at = html.find('id="stamp"')
+        self.assertGreater(title_at, 0)
+        self.assertGreater(refresh_at, title_at)
+        self.assertLess(refresh_at, stamp_at)
+        self.assertIn("D.refreshedAt", html)
+        self.assertIn("refreshedAtUtc", html)
+        self.assertIn('refreshClock(instant,"Asia/Hong_Kong")', html)
+        self.assertIn(" local · ", html)
+        self.assertIn(" Hong Kong", html)
+        self.assertNotIn("5 Nov 2026, 3:26 PM", html)
+        self.assertNotIn("Date.now(", html)
 
 
 if __name__ == "__main__":

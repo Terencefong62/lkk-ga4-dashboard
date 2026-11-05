@@ -369,6 +369,22 @@ def accumulate(snapshot: dict, property_id: str, report: str, rows: list[dict], 
         snapshot["hosts"].setdefault(key, set()).add(property_id)
 
 
+def as_utc_iso(value: object) -> str:
+    """Normalize a refresh instant to UTC ISO-8601. Empty or unparseable stays empty."""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = dt.datetime.fromisoformat(text)
+    except ValueError:
+        return ""
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _duration_seconds(bucket: dict) -> float:
     if not bucket["sessions"]:
         return 0.0
@@ -497,7 +513,7 @@ def finalize_snapshot(
     data_end = max(present_dates) if present_dates else end
     return {
         "mcpServer": OFFICIAL_MCP_SERVER,
-        "refreshedAt": refreshed_at,
+        "refreshedAt": as_utc_iso(refreshed_at) or refreshed_at,
         "timezone": TIMEZONE,
         "dataStart": data_start,
         "dataEnd": data_end,
@@ -589,7 +605,7 @@ async def refresh(info: dict, start: str, end: str, only: set[str] | None, catal
             )
             accumulate(collected, property_id, name, rows, catalog)
             print(f"  {name}: {len(rows)} rows", flush=True)
-    refreshed_at = dt.datetime.now(HKT).isoformat(timespec="seconds")
+    refreshed_at = as_utc_iso(dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"))
     return finalize_snapshot(
         collected,
         start=start,
@@ -923,7 +939,7 @@ def merge_live(published: dict, snapshot: dict, catalog: dict[str, dict]) -> dic
             raise RefreshError(f"Refusing to publish without series for {key}.")
 
     merged_data = {
-        "refreshedAt": snapshot.get("refreshedAt") or data.get("refreshedAt"),
+        "refreshedAt": as_utc_iso(snapshot.get("refreshedAt") or data.get("refreshedAt")),
         "timezone": snapshot.get("timezone") or data.get("timezone") or TIMEZONE,
         "dataStart": merged_start,
         "dataEnd": merged_end,
