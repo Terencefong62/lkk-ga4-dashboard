@@ -402,8 +402,10 @@ class RefreshTests(unittest.TestCase):
         self.assertIn("D.refreshedAt", html)
         self.assertIn("refreshedAtUtc", html)
         self.assertIn('refreshClock(instant,"Asia/Hong_Kong")', html)
-        self.assertIn(" local · ", html)
-        self.assertIn(" Hong Kong", html)
+        self.assertIn("Refreshed at:", html)
+        self.assertIn(" local time", html)
+        self.assertIn(" (HKT)", html)
+        self.assertNotIn(" local · ", html)
         self.assertNotIn("5 Nov 2026, 3:26 PM", html)
         self.assertNotIn("Date.now(", html)
 
