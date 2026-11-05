@@ -86,6 +86,17 @@ DAILY_METRICS = [
     "averageSessionDuration",
 ]
 PAGE_SIZE = 100_000
+# analytics-mcp's Data API client times out at 60 seconds. A busy property
+# can miss that on a full-year page, so those calls retry and then split.
+REPORT_ATTEMPTS = 2
+RETRYABLE_API_ERRORS = {
+    "DeadlineExceeded",
+    "ServiceUnavailable",
+    "InternalServerError",
+    "TooManyRequests",
+    "ResourceExhausted",
+    "Aborted",
+}
 
 
 class RefreshError(SystemExit):
@@ -545,12 +556,48 @@ def page_filter() -> dict:
     return {"or_group": {"expressions": [contains("/product"), contains("/recipe")]}}
 
 
+def split_window(start: str, end: str) -> tuple[tuple[str, str], tuple[str, str]] | None:
+    """Split an inclusive date window in half. A single day cannot be split."""
+    start_day = dt.date.fromisoformat(start)
+    end_day = dt.date.fromisoformat(end)
+    span = (end_day - start_day).days
+    if span < 1:
+        return None
+    mid = start_day + dt.timedelta(days=span // 2)
+    right = mid + dt.timedelta(days=1)
+    return (start, mid.isoformat()), (right.isoformat(), end)
+
+
+async def _run_report_page(run_report, property_id: str, **kwargs) -> dict:
+    """Call analytics-mcp run_report, retrying transient deadline and 5xx errors."""
+    delay = 2
+    last_error = "Error"
+    for attempt in range(REPORT_ATTEMPTS):
+        try:
+            report = await run_report(property_id=property_id, **kwargs)
+        except Exception as exc:
+            last_error = type(exc).__name__
+            if last_error not in RETRYABLE_API_ERRORS or attempt + 1 == REPORT_ATTEMPTS:
+                raise RefreshError(
+                    f"run_report for property {property_id} failed ({last_error})."
+                ) from None
+            print(f"  retrying property {property_id} after {last_error}", flush=True)
+            await asyncio.sleep(delay)
+            delay = min(delay * 2, 30)
+            continue
+        if not isinstance(report, dict):
+            raise RefreshError(f"run_report for property {property_id} returned an unexpected response.")
+        return report
+    raise RefreshError(f"run_report for property {property_id} failed ({last_error}).")
+
+
 async def fetch_rows(run_report, property_id: str, *, dimensions, metrics, start: str, end: str, dimension_filter=None) -> list[dict]:
     rows = []
     offset = 0
     while True:
-        report = await run_report(
-            property_id=property_id,
+        report = await _run_report_page(
+            run_report,
+            property_id,
             date_ranges=[{"start_date": start, "end_date": end, "name": "snapshot"}],
             dimensions=dimensions,
             metrics=metrics,
@@ -559,14 +606,48 @@ async def fetch_rows(run_report, property_id: str, *, dimensions, metrics, start
             offset=offset or None,
             return_property_quota=False,
         )
-        if not isinstance(report, dict):
-            raise RefreshError(f"run_report for property {property_id} returned an unexpected response.")
         batch = report.get("rows") or []
         rows.extend(batch)
         row_count = int(report.get("row_count") or 0)
         offset += len(batch)
         if not batch or offset >= row_count:
             return rows
+
+
+async def fetch_report_rows(run_report, property_id: str, *, dimensions, metrics, start: str, end: str, dimension_filter=None) -> list[dict]:
+    """Read one report, splitting the date window when the API deadline wins."""
+    try:
+        return await fetch_rows(
+            run_report,
+            property_id,
+            dimensions=dimensions,
+            metrics=metrics,
+            start=start,
+            end=end,
+            dimension_filter=dimension_filter,
+        )
+    except RefreshError as exc:
+        if "DeadlineExceeded" not in str(exc):
+            raise
+        parts = split_window(start, end)
+        if parts is None:
+            raise
+        print(f"  property {property_id}: splitting {start} to {end} after the API deadline", flush=True)
+        left, right = parts
+        rows = []
+        for chunk_start, chunk_end in (left, right):
+            rows.extend(
+                await fetch_report_rows(
+                    run_report,
+                    property_id,
+                    dimensions=dimensions,
+                    metrics=metrics,
+                    start=chunk_start,
+                    end=chunk_end,
+                    dimension_filter=dimension_filter,
+                )
+            )
+        return rows
 
 
 async def refresh(info: dict, start: str, end: str, only: set[str] | None, catalog: dict[str, dict]) -> dict:
@@ -594,7 +675,7 @@ async def refresh(info: dict, start: str, end: str, only: set[str] | None, catal
         property_id = prop["propertyId"]
         print(f"Property {property_id} ({prop['displayName']})", flush=True)
         for name, dimensions, metrics, dimension_filter in reports:
-            rows = await fetch_rows(
+            rows = await fetch_report_rows(
                 run_report,
                 property_id,
                 dimensions=dimensions,

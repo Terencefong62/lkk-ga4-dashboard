@@ -175,6 +175,12 @@ class RefreshTests(unittest.TestCase):
         with self.assertRaises(refresh.RefreshError):
             refresh.resolve_dates("2026-02-01", "2026-01-01")
 
+    def test_long_report_window_splits_without_changing_a_single_day(self):
+        left, right = refresh.split_window("2026-01-01", "2026-11-04")
+        self.assertEqual(left, ("2026-01-01", "2026-06-03"))
+        self.assertEqual(right, ("2026-06-04", "2026-11-04"))
+        self.assertIsNone(refresh.split_window("2026-11-04", "2026-11-04"))
+
     def test_property_filter(self):
         summaries = [
             {
