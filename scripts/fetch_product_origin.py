@@ -196,11 +196,13 @@ async def _rows_for_host(run_report, property_id: str, host: str, paths: list[st
 async def _build_kind(run_report, kind: str, needle: str, classifier, slots: dict[str, int]) -> dict:
     start, end, content_paths = _load_content_paths(kind, needle)
     origin: dict[str, dict[str, list[list[int]]]] = {}
+    product_recipes: dict[str, dict] = {}
     for host, paths in sorted(content_paths.items()):
         property_id = HOST_PROPERTY[host]
         print(f"{kind} {host} via {property_id}: {len(paths)} paths", flush=True)
         rows = await _rows_for_host(run_report, property_id, host, paths, start, end, needle)
         buckets: dict[str, dict[int, list[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0, 0]))
+        recipe_sources: dict[str, dict[str, dict[int, int]]] = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
         known = {path.lower(): path for path in paths}
         for row in rows:
             date = row["dimension_values"][0]["value"]
@@ -213,7 +215,12 @@ async def _build_kind(run_report, kind: str, needle: str, classifier, slots: dic
             if not canonical:
                 continue
             day = _day_index(iso_from_ga4(date), start)
-            buckets[canonical][day][slots[classifier(referrer)]] += views
+            slot_name = classifier(referrer)
+            buckets[canonical][day][slots[slot_name]] += views
+            if kind == "product" and slot_name == "recipe":
+                recipe_path = _referrer_path(referrer)
+                if recipe_path:
+                    recipe_sources[canonical][recipe_path][day] += views
         host_out = {}
         for path, days in buckets.items():
             records = [
@@ -223,28 +230,46 @@ async def _build_kind(run_report, kind: str, needle: str, classifier, slots: dic
             ]
             if records:
                 host_out[path] = records
-        origin[host] = host_out
+        if host_out:
+            origin[host] = host_out
+        if kind == "product" and recipe_sources:
+            compact = {}
+            for product, recipes in recipe_sources.items():
+                recipe_out = {
+                    recipe: [[day, views] for day, views in sorted(days.items()) if views]
+                    for recipe, days in recipes.items()
+                }
+                recipe_out = {recipe: rows for recipe, rows in recipe_out.items() if rows}
+                if recipe_out:
+                    compact[product] = recipe_out
+            if compact:
+                product_recipes[host] = compact
         print(f"  {len(rows)} source rows -> {len(host_out)} paths", flush=True)
-    return origin
+    return origin, product_recipes
 
 
-async def build() -> tuple[dict, dict]:
+async def build() -> tuple[dict, dict, dict]:
     from analytics_mcp.tools.reporting.core import run_report
 
     info = parse_service_account(os.environ.get("GA4_SERVICE_ACCOUNT_JSON"))
     product_slots = {"recipe": 0, "listing": 1, "other": 2}
     recipe_slots = {"product": 0, "listing": 1, "other": 2}
     with ServiceAccountCredentials(info):
-        product = await _build_kind(run_report, "product", "/product", referrer_class, product_slots)
-        recipe = await _build_kind(run_report, "recipe", "/recipe", recipe_referrer_class, recipe_slots)
-    return product, recipe
+        product, from_recipes = await _build_kind(run_report, "product", "/product", referrer_class, product_slots)
+        recipe, _ignored = await _build_kind(run_report, "recipe", "/recipe", recipe_referrer_class, recipe_slots)
+    return product, recipe, from_recipes
 
 
-def write_origin(product: dict, recipe: dict) -> Path:
+def write_origin(product: dict, recipe: dict, from_recipes: dict) -> Path:
     target = REPO / "product-origin.js"
     product_payload = json.dumps(product, ensure_ascii=False, separators=(",", ":"))
     recipe_payload = json.dumps(recipe, ensure_ascii=False, separators=(",", ":"))
-    source = f"window.GA4_PRODUCT_ORIGIN={product_payload};\nwindow.GA4_RECIPE_ORIGIN={recipe_payload};\n"
+    from_payload = json.dumps(from_recipes, ensure_ascii=False, separators=(",", ":"))
+    source = (
+        f"window.GA4_PRODUCT_ORIGIN={product_payload};\n"
+        f"window.GA4_RECIPE_ORIGIN={recipe_payload};\n"
+        f"window.GA4_PRODUCT_FROM_RECIPES={from_payload};\n"
+    )
     if "private_key" in source or "service_account" in source:
         raise SystemExit("Refusing to write credentials into product-origin.js")
     target.write_text(source, encoding="utf-8")
@@ -253,8 +278,8 @@ def write_origin(product: dict, recipe: dict) -> Path:
 
 
 def main() -> None:
-    product, recipe = asyncio.run(build())
-    write_origin(product, recipe)
+    product, recipe, from_recipes = asyncio.run(build())
+    write_origin(product, recipe, from_recipes)
 
 
 if __name__ == "__main__":
