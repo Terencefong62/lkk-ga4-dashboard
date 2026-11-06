@@ -112,13 +112,13 @@
         <div class="focus-head">
           <div class="focus-title-row">
             <h3 id="focus-title">Top 5 products and recipes</h3>
-            <div class="title-lang" id="title-lang" hidden>
+            <div class="title-lang" id="title-lang" data-title-scope="focus" hidden>
               <span class="title-lang-label">Translate</span>
               <div class="title-lang-choices" role="group" aria-label="Translate names">
                 <button type="button" data-title-lang="en" aria-pressed="false">English</button>
                 <button type="button" data-title-lang="zh-CN" aria-pressed="false">中文</button>
               </div>
-              <span class="title-lang-note" id="title-lang-note" role="status"></span>
+              <span class="title-lang-note" role="status"></span>
             </div>
           </div>
           <div class="sub" id="focus-sub"></div>
@@ -132,14 +132,27 @@
     <div class="rail">
       <aside class="panel ranking"><div><h2>Top 5 markets</h2><div class="sub">Ranked by sessions for the selected period</div></div><ol id="ranking"></ol></aside>
       <section class="engaged panel" id="engaged" hidden>
-        <div class="focus-head"><h3>Highly engaged products &amp; recipes</h3><div class="sub" id="engaged-sub"></div></div>
+        <div class="focus-head">
+          <div class="focus-title-row">
+            <h3>Highly engaged products &amp; recipes</h3>
+            <div class="title-lang" data-title-scope="engaged" hidden>
+              <span class="title-lang-label">Translate</span>
+              <div class="title-lang-choices" role="group" aria-label="Translate names">
+                <button type="button" data-title-lang="en" aria-pressed="false">English</button>
+                <button type="button" data-title-lang="zh-CN" aria-pressed="false">中文</button>
+              </div>
+              <span class="title-lang-note" role="status"></span>
+            </div>
+          </div>
+          <div class="sub" id="engaged-sub"></div>
+        </div>
         <p class="engaged-note" id="engaged-note">Top 5 products by pageviews that came from a recipe detail page, and the recipes that sent them.</p>
         <div id="engaged-list"></div>
       </section>
     </div>
   </div>
 
-  <div class="section-head"><div><h2>What visitors are viewing</h2><p>Top five product and recipe detail pages for each leading domain</p></div><div class="badge" id="content-range">Selected period</div></div>
+  <div class="section-head"><div><div class="focus-title-row"><h2>What visitors are viewing</h2><div class="title-lang" data-title-scope="viewing" hidden><span class="title-lang-label">Translate</span><div class="title-lang-choices" role="group" aria-label="Translate names"><button type="button" data-title-lang="en" aria-pressed="false">English</button><button type="button" data-title-lang="zh-CN" aria-pressed="false">中文</button></div><span class="title-lang-note" role="status"></span></div></div><p>Top five product and recipe detail pages for each leading domain</p></div><div class="badge" id="content-range">Selected period</div></div>
   <section class="content-grid" id="content-grid" aria-label="Top products and recipes"></section>
   <div class="section-head" id="bot-head"><div><h2>Bot & Spam Filtered Traffic</h2><p>Google Analytics 4 already excludes traffic from known bots and spiders automatically, using Google’s research and the IAB International Spiders and Bots List; official <a href="https://support.google.com/analytics/answer/9888366" target="_blank" rel="noopener">Analytics Help</a> does not name individual LLM or AI crawlers.</p></div><div class="badge" id="bot-range">Selected period</div></div>
   <section class="panel bot-panel" id="bot-filtered" aria-label="Bot & spam filtered traffic">
@@ -565,6 +578,7 @@
       $("#content-grid").innerHTML='<div class="empty">Select a domain and data period to view top products and recipes</div>';
       $("#focus-content").hidden=true;
       $("#engaged").hidden=true;
+      syncTitleLangs();
       $("#donuts").hidden=true;
       $("#bot-range").textContent="Awaiting selection";
       $("#bot-empty").hidden=false;
@@ -604,7 +618,7 @@
       const comparePlot=primaryPlot.map((row,i)=>{const c=compareFilled[i]||{date:"",sessions:0,users:0,views:0,duration:0};return{...c,date:row.date,tooltipDate:c.date}});
       draw(primaryPlot,comparePlot,domain,periodTarget);
     }else draw(primary.data,comparison?.data||[],domain,compareDomain);
-    renderRanking();renderInsight(primary,domain,comparison,compareDomain,period);renderDonuts(domain);renderFocusContent(domain);renderEngaged(domain);renderContent();renderBotFiltered(domain);
+    renderRanking();renderInsight(primary,domain,comparison,compareDomain,period);renderDonuts(domain);renderFocusContent(domain);renderEngaged(domain);renderContent();renderBotFiltered(domain);syncTitleLangs();
   }
   function axisLabel(s,withYear){if(!s)return"";const d=new Date(s+"T12:00:00");return withYear?d.toLocaleDateString("en",{month:"short",day:"numeric",year:"2-digit"}):dateFmt(s)}
   function draw(data,compareData,domain,compareDomain){
@@ -899,7 +913,6 @@
     const showMarket=isTotal(keyOf(domain));
     $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true,showMarket,true,true);
     $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true,showMarket,true,true);
-    syncTitleLang();
   }
   let titleLang="",titleLangToken=0;
   const titleCache=new Map();
@@ -918,15 +931,26 @@
     titleCache.set(key,value);
     try{sessionStorage.setItem("lkk-title:"+key,value)}catch(e){}
   }
-  function setTitleNote(text,isError){const note=$("#title-lang-note");if(!note)return;note.textContent=text||"";note.classList.toggle("is-error",!!isError&&!!text)}
+  const TITLE_ROOTS={focus:"#focus-content",engaged:"#engaged",viewing:"#content-grid"};
+  function titleBox(scope){return document.querySelector('.title-lang[data-title-scope="'+scope+'"]')}
+  function titleNodes(scope){
+    const root=document.querySelector(TITLE_ROOTS[scope]||"");
+    if(!root||root.hidden)return [];
+    return [...root.querySelectorAll(".js-title")];
+  }
+  function setTitleNote(scope,text,isError){
+    const note=titleBox(scope)?.querySelector(".title-lang-note");
+    if(!note)return;
+    note.textContent=text||"";
+    note.classList.toggle("is-error",!!isError&&!!text);
+  }
   function paintTitleLang(){
-    document.querySelectorAll("#title-lang [data-title-lang]").forEach(btn=>{
+    document.querySelectorAll(".title-lang [data-title-lang]").forEach(btn=>{
       const on=!!titleLang&&btn.dataset.titleLang===titleLang;
       btn.setAttribute("aria-pressed",on?"true":"false");
       btn.title=on?"Show the original names":(btn.dataset.titleLang==="zh-CN"?"Translate names into Chinese":"Translate names into English");
     });
   }
-  function titleNodes(){return [...document.querySelectorAll("#focus-content .js-title")]}
   async function fetchTitleTranslation(text,tl){
     const url="https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="+encodeURIComponent(tl)+"&dt=t&q="+encodeURIComponent(text);
     let lastError;
@@ -947,15 +971,19 @@
     throw lastError;
   }
   async function applyTitleLang(){
-    const token=++titleLangToken,lang=titleLang,nodes=titleNodes();
+    const token=++titleLangToken,lang=titleLang,scopes=["focus","engaged","viewing"];
+    const groups=scopes.map(scope=>({scope,nodes:titleNodes(scope)}));
     if(!lang){
-      nodes.forEach(n=>{n.textContent=n.dataset.original||"";n.removeAttribute("title")});
-      setTitleNote("");
+      groups.forEach(group=>group.nodes.forEach(n=>{n.textContent=n.dataset.original||"";n.removeAttribute("title")}));
+      scopes.forEach(scope=>setTitleNote(scope,""));
       return;
     }
-    let failed=0;
-    if(nodes.some(n=>readTitleCache(n.dataset.original||"",lang)==null))setTitleNote("Translating…");
-    await Promise.all(nodes.map(async (n,i)=>{
+    const failed=new Map(scopes.map(scope=>[scope,0]));
+    groups.forEach(group=>{
+      if(group.nodes.some(n=>readTitleCache(n.dataset.original||"",lang)==null))setTitleNote(group.scope,"Translating…");
+    });
+    const pending=groups.flatMap(group=>group.nodes.map(n=>({scope:group.scope,n})));
+    await Promise.all(pending.map(async ({scope,n},i)=>{
       const original=n.dataset.original||"";
       const cached=readTitleCache(original,lang);
       if(cached!=null){
@@ -968,19 +996,30 @@
         writeTitleCache(original,lang,translated);
         if(token===titleLangToken&&titleLang===lang&&n.isConnected){n.textContent=translated;n.title=original}
       }catch(err){
-        failed++;
+        failed.set(scope,(failed.get(scope)||0)+1);
         if(token===titleLangToken&&titleLang===lang&&n.isConnected){n.textContent=original;n.removeAttribute("title")}
       }
     }));
     if(token!==titleLangToken||titleLang!==lang)return;
-    setTitleNote(failed?(failed===nodes.length?"Translation unavailable":"Some names could not be translated"):"",!!failed);
+    groups.forEach(group=>{
+      const count=failed.get(group.scope)||0;
+      setTitleNote(group.scope,count?(count===group.nodes.length?"Translation unavailable":"Some names could not be translated"):"",!!count);
+    });
   }
-  function syncTitleLang(){
-    const box=$("#title-lang"),show=!!$("#focus-content")&&!$("#focus-content").hidden&&titleNodes().length>0;
+  function syncTitleLang(scope){
+    const box=titleBox(scope),show=titleNodes(scope).length>0;
     if(box)box.hidden=!show;
+    if(!show)setTitleNote(scope,"");
+  }
+  function syncTitleLangs(){
+    ["focus","engaged","viewing"].forEach(syncTitleLang);
     paintTitleLang();
-    if(!show){setTitleNote("");return}
     applyTitleLang();
+  }
+  function markedTitle(title){
+    const raw=String(title??"");
+    if(!needsTitleTranslation(raw))return esc(raw);
+    return '<span class="js-title" data-original="'+esc(raw)+'">'+esc(raw)+'</span>';
   }
   const seriesDayCache=new Map();
   function seriesByDay(key){
@@ -1038,24 +1077,23 @@
       const shown=item.recipes.slice(0,6),rest=item.recipes.length-shown.length;
       const recipes=shown.map(recipe=>{
         const pct=item.productViews?recipe.views/item.productViews*100:0;
-        return '<div class="engaged-recipe"><i></i><b>'+esc(recipe.title)+'</b><span>'+engagedCount(recipe.views)+' · '+pct.toFixed(1)+'% of page traffic</span></div>';
+        return '<div class="engaged-recipe"><i></i><b>'+markedTitle(recipe.title)+'</b><span>'+engagedCount(recipe.views)+' · '+pct.toFixed(1)+'% of page traffic</span></div>';
       }).join("")+(rest?'<div class="engaged-recipe"><i style="visibility:hidden"></i><b>'+rest+' more recipe page'+(rest===1?'':'s')+'</b><span></span></div>':'');
       const market=showMarket?' <span class="item-market">'+esc(item.market)+'</span>':'';
-      return '<article class="engaged-card"><div class="engaged-top"><span class="engaged-rank">'+(i+1)+'</span><div class="engaged-name">'+esc(item.title)+market+'</div><div class="engaged-stat"><b>'+engagedCount(item.fromRecipes)+'</b> '+share.toFixed(1)+'% of page traffic</div></div><div class="engaged-recipes">'+recipes+'</div></article>';
+      return '<article class="engaged-card"><div class="engaged-top"><span class="engaged-rank">'+(i+1)+'</span><div class="engaged-name">'+markedTitle(item.title)+market+'</div><div class="engaged-stat"><b>'+engagedCount(item.fromRecipes)+'</b> '+share.toFixed(1)+'% of page traffic</div></div><div class="engaged-recipes">'+recipes+'</div></article>';
     }).join("");
   }
   function renderContent(){
     const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"views")})).sort((a,b)=>b.value-a.value).slice(0,5);
-    $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,true)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
+    $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,true,false,false,false,true)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true,false,false,false,true)+'</div></article>'}).join("");
   }
-  $("#title-lang").addEventListener("click",e=>{
+  document.querySelectorAll(".title-lang").forEach(box=>box.addEventListener("click",e=>{
     const btn=e.target.closest("[data-title-lang]");
-    if(!btn)return;
+    if(!btn||!box.contains(btn))return;
     const next=btn.dataset.titleLang||"";
     titleLang=titleLang===next?"":next;
-    paintTitleLang();
-    applyTitleLang();
-  });
+    syncTitleLangs();
+  }));
   $("#bot-filter").addEventListener("change",e=>{state.botFilter=e.target.checked;render()});
   $("#domain").addEventListener("change",e=>{state.host=e.target.value;syncCompareTotalOption();render()});
   $("#compare").addEventListener("change",e=>{const next=e.target.value;state.compare=(next===state.host||(isTotal(state.host)&&isTotal(next)))?"":next;if(!state.compare)e.target.value="";if(state.compare){state.periodCompare="";$("#period-compare").value=""}render()});
