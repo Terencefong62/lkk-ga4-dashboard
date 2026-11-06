@@ -834,7 +834,7 @@
   function renderFocusContent(domain){
     $("#focus-content").hidden=false;
     $("#focus-title").textContent="Top 5 products and recipes";
-    $("#focus-sub").textContent=(isTotal(keyOf(domain))?"Total · all domains":domain.label)+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
+    $("#focus-sub").textContent=(isTotal(keyOf(domain))?"all domains":domain.host)+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
     const showMarket=isTotal(keyOf(domain));
     $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true,showMarket);
     $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true,showMarket);
