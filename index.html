@@ -721,7 +721,7 @@
         c.records.forEach(r=>{
           if(r[0]<start||r[0]>end)return;
           const title=c.paths[r[1]][1],path=c.paths[r[1]][0];
-          if(type==="recipe"&&isRecipeListing(path))return;
+          if((type==="recipe"&&isRecipeListing(path))||(type==="product"&&isProductListing(path)))return;
           const id=title+"\0"+k,n=contentValue(r,k);
           let prev=totals.get(id);
           if(!prev){prev={title,path,host:domain.host||k,market:domain.label,value:0};totals.set(id,prev)}
@@ -736,7 +736,7 @@
     }
     const c=D.content[key]?.[type];if(!c)return null;
     const totals=new Map();
-    c.records.forEach(r=>{if(r[0]<start||r[0]>end)return;if(type==="recipe"&&isRecipeListing(c.paths[r[1]][0]))return;totals.set(r[1],(totals.get(r[1])||0)+contentValue(r,key))});
+    c.records.forEach(r=>{if(r[0]<start||r[0]>end)return;const path=c.paths[r[1]][0];if((type==="recipe"&&isRecipeListing(path))||(type==="product"&&isProductListing(path)))return;totals.set(r[1],(totals.get(r[1])||0)+contentValue(r,key))});
     const host=resolveDomain(key)?.host||key,total=[...totals.values()].reduce((n,v)=>n+v,0),items=[...totals].map(([i,value])=>{const item={title:c.paths[i][1],path:c.paths[i][0],host,value,pct:total?value/total*100:0};if(type==="product"||type==="recipe")addOrigin(item,sumOrigin(type==="recipe"?window.GA4_RECIPE_ORIGIN:window.GA4_PRODUCT_ORIGIN,key,item.path,start,end,type));return item}).sort((a,b)=>b.value-a.value).slice(0,5);
     return{total,items};
   }
