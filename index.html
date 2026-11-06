@@ -652,6 +652,7 @@
     contentFactorCache.set(key,m);return m;
   }
   function contentValue(r,key){return r.length>=5?Number(r[4])||0:(Number(r[2])||0)*(contentFactors(key).get(r[0])||0)}
+  function isRecipeListing(path){return /\/recipes?$/i.test(String(path||"").split("?")[0].replace(/\/+$/,""))}
   const ORIGIN_LABELS={product:[["origin-recipe","Recipe detail"],["origin-listing","Product listing"],["origin-other","Other"]],recipe:[["origin-product","Product detail"],["origin-recipe-list","Recipe listing"],["origin-other","Other"]]};
   function sumOrigin(table,key,path,start,end,kind){
     const rows=table?.[key]?.[path];if(!rows)return null;
@@ -669,7 +670,9 @@
         const seen=new Set();
         c.records.forEach(r=>{
           if(r[0]<start||r[0]>end)return;
-          const title=c.paths[r[1]][1],path=c.paths[r[1]][0],id=title+"\0"+k,prev=totals.get(id)||{title,market:domain.label,value:0},n=contentValue(r,k);
+          const title=c.paths[r[1]][1],path=c.paths[r[1]][0];
+          if(type==="recipe"&&isRecipeListing(path))return;
+          const id=title+"\0"+k,prev=totals.get(id)||{title,market:domain.label,value:0},n=contentValue(r,k);
           prev.value+=n;totals.set(id,prev);grand+=n;
           if((type==="product"||type==="recipe")&&!seen.has(path)){seen.add(path);addOrigin(prev,sumOrigin(type==="recipe"?window.GA4_RECIPE_ORIGIN:window.GA4_PRODUCT_ORIGIN,k,path,start,end,type))}
         });
@@ -680,7 +683,7 @@
     }
     const c=D.content[key]?.[type];if(!c)return null;
     const totals=new Map();
-    c.records.forEach(r=>{if(r[0]>=start&&r[0]<=end)totals.set(r[1],(totals.get(r[1])||0)+contentValue(r,key))});
+    c.records.forEach(r=>{if(r[0]<start||r[0]>end)return;if(type==="recipe"&&isRecipeListing(c.paths[r[1]][0]))return;totals.set(r[1],(totals.get(r[1])||0)+contentValue(r,key))});
     const total=[...totals.values()].reduce((n,v)=>n+v,0),items=[...totals].map(([i,value])=>{const item={title:c.paths[i][1],path:c.paths[i][0],value,pct:total?value/total*100:0};if(type==="product"||type==="recipe")addOrigin(item,sumOrigin(type==="recipe"?window.GA4_RECIPE_ORIGIN:window.GA4_PRODUCT_ORIGIN,key,item.path,start,end,type));return item}).sort((a,b)=>b.value-a.value).slice(0,5);
     return{total,items};
   }
