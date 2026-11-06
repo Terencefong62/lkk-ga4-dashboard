@@ -755,22 +755,26 @@
     if(!path.startsWith("/")||path.startsWith("//"))return"";
     return"https://"+host+path;
   }
-  const TITLE_LANG_MARKERS=/\b(?:para|los|las|del|receta|recetas|productos|hogar|carne|cerdo|arroz|pollo|frijoles|soya|de|con|recette|recettes|pour|trempette|saus|kecap|tiram|resep|produk|beranda|ayam|dengan|bubuk|jamur|minyak|wijen|cuka|rezept|rezepte|sojasauce|knoblauch|recepten|heerlijke|sauzen|strona|znaleziona)\b/iu;
+  const FOREIGN_TITLE_WORD=/\b(?:para|los|las|del|una|con|el|receta|recetas|recette|recettes|productos|produtos|hogar|carne|cerdo|arroz|pollo|frijoles|costillas|de|du|des|le|la|les|aux|pour|trempette|arachides|avec|dans|saus|kecap|tiram|resep|produk|beranda|ayam|dengan|bubuk|jamur|minyak|wijen|cuka|putih|asin|recepten|heerlijke|sauzen|strona|znaleziona|molho|receitas|pagina|gevonden|tipps|kontakt)\b/iu;
+  const FOREIGN_TITLE_STEM=/austernsauce|pflaumensauce|gewurz|wurz|hahnchen|datenschutz|nutzungsbedingungen|glutenfrei|reisessig|sesamol|produkte|geschmack|schmackhaft|chillisauc|teigtasch|soja|knoblauch|sojasauce|rezept|brokkoli|bohnen|vegetarisch|chiliol|saladtdressing|honig|saure|wrzig|feuertopf|chinesische|nudle|krevety|omacka/iu;
+  const ENGLISH_LOANWORD=/\b(?:jalapeños?|purées?|sautéed|sautées?|canapés?)\b/giu;
   function needsTitleTranslation(title){
     const text=String(title??"");
-    let han=0,latin=0,other=0,accent=false;
+    let han=0,latin=0,other=0,accent=0;
     for(const ch of text){
       if(!/\p{L}/u.test(ch))continue;
       if(/\p{Script=Han}/u.test(ch))han++;
-      else if(/\p{Script=Latin}/u.test(ch)){
-        latin++;
-        if(!/[A-Za-z]/.test(ch))accent=true;
-      }else other++;
+      else if(/\p{Script=Latin}/u.test(ch))latin++;
+      else other++;
+    }
+    for(const ch of text.replace(ENGLISH_LOANWORD," ")){
+      if(/\p{Script=Latin}/u.test(ch)&&ch.codePointAt(0)>127)accent++;
     }
     if(other)return true;
-    if(han>latin)return false;
+    if(han&&han>=latin)return false;
+    if(!latin)return false;
     if(accent)return true;
-    return TITLE_LANG_MARKERS.test(text);
+    return FOREIGN_TITLE_WORD.test(text)||FOREIGN_TITLE_STEM.test(text);
   }
   function contentNameHtml(item,linkPages,markTitles){
     const raw=String(item.title??""),safe=esc(raw);
