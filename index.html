@@ -109,7 +109,7 @@
       <aside class="panel ranking"><div><h2>Top 5 markets</h2><div class="sub">Ranked by sessions for the selected period</div></div><ol id="ranking"></ol></aside>
       <section class="engaged panel" id="engaged" hidden>
         <div class="focus-head"><h3>Highly engaged products &amp; recipes</h3><div class="sub" id="engaged-sub"></div></div>
-        <p class="engaged-note">Top 5 products by page views that came from a recipe detail page, and the recipes that sent them.</p>
+        <p class="engaged-note" id="engaged-note">Top 5 products by pageviews that came from a recipe detail page, and the recipes that sent them.</p>
         <div id="engaged-list"></div>
       </section>
     </div>
@@ -147,6 +147,7 @@
         <li>The date range is limited to the current snapshot (<span id="remarks-window"></span>). A previous-period or year-ago comparison can fall outside that window; those days appear empty.</li>
         <li>Average time on site is averaged only across days that still have a duration after the exclusions above. For Total, that average is weighted by remaining sessions. Average daily active users, sessions, and page views divide remaining totals by those days that still have remaining traffic (the same “days with data” idea).</li>
         <li>Top 5 markets shows the five markets with the most remaining sessions. What visitors are viewing shows the five markets with the most remaining page views.</li>
+        <li>Highly engaged products &amp; recipes follows the Traffic type filter. The recipe-referrer snapshot stores page views. Sessions and visitors rescale each day’s page views by that day’s sitewide sessions per page view or active users per page view, then add those days. Visitors on this card are that daily allocation added up, not a deduplicated count of people. The percentage is that count divided by the same metric for the whole product detail page.</li>
         <li>Bot & Spam Filtered Traffic shows the sessions those rules excluded, not remaining traffic. The headline percentage is filtered sessions ÷ unfiltered (raw) sessions for the selected domain or Total.</li>
       </ol>
     </div>
@@ -866,9 +867,32 @@
     $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true,showMarket,true);
     $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true,showMarket,true);
   }
+  const seriesDayCache=new Map();
+  function seriesByDay(key){
+    let m=seriesDayCache.get(key);if(m)return m;
+    m=new Map();(D.series[key]||[]).forEach(x=>{const day=Math.round((Date.parse(x.date+"T00:00:00Z")-base)/86400000);m.set(day,x)});
+    seriesDayCache.set(key,m);return m;
+  }
+  function viewsAsMetric(key,day,views){
+    const n=Number(views)||0;
+    if(!n||state.metric==="views")return n;
+    const row=seriesByDay(key).get(day);
+    if(!row||!row.views)return 0;
+    const part=state.metric==="users"?row.users:row.sessions;
+    return n*((part||0)/row.views);
+  }
+  function engagedMetricPlural(){return state.metric==="users"?"visitors":state.metric==="sessions"?"sessions":"pageviews"}
+  function engagedMetricWord(n){
+    const one=Math.round(Math.abs(n||0))===1;
+    if(state.metric==="users")return one?"visitor":"visitors";
+    if(state.metric==="sessions")return one?"session":"sessions";
+    return one?"pageview":"pageviews";
+  }
+  function engagedCount(n){return fmt(n)+" "+engagedMetricWord(n)}
   function renderEngaged(domain){
     $("#engaged").hidden=false;
-    const key=keyOf(domain),showMarket=isTotal(key);
+    const key=keyOf(domain),showMarket=isTotal(key),unit=engagedMetricPlural();
+    $("#engaged-note").textContent="Top 5 products by "+unit+" that came from a recipe detail page, and the recipes that sent them.";
     $("#engaged-sub").textContent=(showMarket?"all domains":domain.host)+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
     const start=Math.round((Date.parse(state.start+"T00:00:00Z")-base)/86400000),end=Math.round((Date.parse(state.end+"T00:00:00Z")-base)/86400000);
     const keys=showMarket?domainKeys():[key];
@@ -881,28 +905,28 @@
         const recipeCounts=[];
         Object.entries(recipes).forEach(([recipePath,rows])=>{
           let n=0;
-          rows.forEach(row=>{const day=row[0];if(day<start||day>end)return;n+=row[1]||0});
+          rows.forEach(row=>{const day=row[0];if(day<start||day>end)return;n+=viewsAsMetric(k,day,row[1]||0)});
           if(n){fromRecipes+=n;recipeCounts.push({path:recipePath,title:contentTitle(k,"recipe",recipePath),views:n})}
         });
         if(!fromRecipes)return;
         let productViews=0;
-        (totals[productPath]||[]).forEach(row=>{if(row[0]<start||row[0]>end)return;productViews+=(row[1]||0)+(row[2]||0)+(row[3]||0)});
+        (totals[productPath]||[]).forEach(row=>{if(row[0]<start||row[0]>end)return;productViews+=viewsAsMetric(k,row[0],(row[1]||0)+(row[2]||0)+(row[3]||0))});
         recipeCounts.sort((a,b)=>b.views-a.views);
         products.push({host:k,market:resolveDomain(k)?.label||k,path:productPath,title:contentTitle(k,"product",productPath),fromRecipes,productViews,recipes:recipeCounts});
       });
     });
     products.sort((a,b)=>b.fromRecipes-a.fromRecipes||b.productViews-a.productViews);
     const top=products.slice(0,5);
-    if(!top.length){$("#engaged-list").innerHTML='<div class="empty">No product page views came from a recipe detail page in this period</div>';return}
+    if(!top.length){$("#engaged-list").innerHTML='<div class="empty">No product '+unit+' came from a recipe detail page in this period</div>';return}
     $("#engaged-list").innerHTML=top.map((item,i)=>{
       const share=item.productViews?item.fromRecipes/item.productViews*100:0;
       const shown=item.recipes.slice(0,6),rest=item.recipes.length-shown.length;
       const recipes=shown.map(recipe=>{
         const pct=item.productViews?recipe.views/item.productViews*100:0;
-        return '<div class="engaged-recipe"><i></i><b>'+esc(recipe.title)+'</b><span>'+fmt(recipe.views)+' · '+pct.toFixed(1)+'%</span></div>';
+        return '<div class="engaged-recipe"><i></i><b>'+esc(recipe.title)+'</b><span>'+engagedCount(recipe.views)+' · '+pct.toFixed(1)+'% of this product detail page traffic</span></div>';
       }).join("")+(rest?'<div class="engaged-recipe"><i style="visibility:hidden"></i><b>'+rest+' more recipe page'+(rest===1?'':'s')+'</b><span></span></div>':'');
       const market=showMarket?' <span class="item-market">'+esc(item.market)+'</span>':'';
-      return '<article class="engaged-card"><div class="engaged-top"><span class="engaged-rank">'+(i+1)+'</span><div class="engaged-name">'+esc(item.title)+market+'</div><div class="engaged-stat"><b>'+fmt(item.fromRecipes)+'</b>'+share.toFixed(1)+'% of this product</div></div><div class="engaged-recipes">'+recipes+'</div></article>';
+      return '<article class="engaged-card"><div class="engaged-top"><span class="engaged-rank">'+(i+1)+'</span><div class="engaged-name">'+esc(item.title)+market+'</div><div class="engaged-stat"><b>'+engagedCount(item.fromRecipes)+'</b> '+share.toFixed(1)+'% of this product detail page traffic</div></div><div class="engaged-recipes">'+recipes+'</div></article>';
     }).join("");
   }
   function renderContent(){
