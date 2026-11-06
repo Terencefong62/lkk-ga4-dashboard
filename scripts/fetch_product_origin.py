@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Build product-origin.js: where each product detail page's views came from.
+"""Build product-origin.js: previous page for top product and recipe pages.
 
-The previous page (GA4 pageReferrer) is classed as:
+Product pages class the previous page (GA4 pageReferrer) as:
   recipe detail   /recipe/{slug} or /recipes/{slug}
   product listing /products, or /products/saucetype/...
   other           everything else, including another product detail page
+
+Recipe pages class the previous page as:
+  product detail  /products/{slug}, not the products index or a sauce-type page
+  recipe listing  a path that ends at /recipe or /recipes
+  other           everything else, including another recipe detail page
 
 Daily counts follow the dashboard's day index (dataStart = day 0) so the
 selected period can sum them. The service-account JSON is never written.
@@ -56,15 +61,26 @@ HOST_PROPERTY = {
 
 RECIPE_DETAIL = re.compile(r"/recipes?/[^/?#]+", re.IGNORECASE)
 PRODUCT_LISTING = re.compile(r"/products(?:/saucetype(?:/[^/?#]*)?)?$", re.IGNORECASE)
+PRODUCT_DETAIL = re.compile(
+    r"/products/(?!saucetype(?:/|$)|attributestags(?:/|$))[^/?#]+$",
+    re.IGNORECASE,
+)
+RECIPE_LISTING = re.compile(r"/recipes?$", re.IGNORECASE)
+
+
+def _referrer_path(url: str) -> str:
+    text = (url or "").strip()
+    if not text or text == "(not set)":
+        return ""
+    path = urlparse(text).path if "://" in text else text
+    return path.split("?", 1)[0].rstrip("/")
 
 
 def referrer_class(url: str) -> str:
-    """Return recipe, listing, or other for a GA4 pageReferrer value."""
-    text = (url or "").strip()
-    if not text or text == "(not set)":
+    """Return recipe, listing, or other for a product page's previous page."""
+    path = _referrer_path(url)
+    if not path:
         return "other"
-    path = urlparse(text).path if "://" in text else text
-    path = path.split("?", 1)[0].rstrip("/")
     if RECIPE_DETAIL.search(path):
         return "recipe"
     if PRODUCT_LISTING.search(path):
@@ -72,7 +88,19 @@ def referrer_class(url: str) -> str:
     return "other"
 
 
-def _load_content_paths() -> tuple[str, str, dict[str, list[str]]]:
+def recipe_referrer_class(url: str) -> str:
+    """Return product, listing, or other for a recipe page's previous page."""
+    path = _referrer_path(url)
+    if not path:
+        return "other"
+    if PRODUCT_DETAIL.search(path):
+        return "product"
+    if RECIPE_LISTING.search(path):
+        return "listing"
+    return "other"
+
+
+def _load_content_paths(kind: str, needle: str) -> tuple[str, str, dict[str, list[str]]]:
     encoded = []
     chunk_dir = REPO / "chunks"
     files = sorted(
@@ -89,13 +117,13 @@ def _load_content_paths() -> tuple[str, str, dict[str, list[str]]]:
     payload = json.loads(source[source.index(marker) + len(marker) :].rstrip().rstrip(";"))
     paths: dict[str, list[str]] = {}
     for key, kinds in (payload.get("content") or {}).items():
-        product = (kinds or {}).get("product") or {}
+        section = (kinds or {}).get(kind) or {}
         values = []
-        for pair in product.get("paths") or []:
+        for pair in section.get("paths") or []:
             if not pair:
                 continue
             page = str(pair[0])
-            if "/product" in page.lower():
+            if needle in page.lower():
                 values.append(page)
         if values and key in HOST_PROPERTY:
             paths[key] = sorted(set(values))
@@ -134,7 +162,7 @@ def _day_index(date: str, start: str) -> int:
     return (date_cls.fromisoformat(date) - date_cls.fromisoformat(start)).days
 
 
-async def _rows_for_host(run_report, property_id: str, host: str, paths: list[str], start: str, end: str):
+async def _rows_for_host(run_report, property_id: str, host: str, paths: list[str], start: str, end: str, needle: str):
     batches = [paths[index : index + 40] for index in range(0, len(paths), 40)]
     rows = []
     for batch in batches:
@@ -149,7 +177,7 @@ async def _rows_for_host(run_report, property_id: str, host: str, paths: list[st
                 dimension_filter=_and(_exact("hostName", host), _in_list("pagePath", batch)),
             )
         except Exception as exc:
-            print(f"  in-list failed for {host} ({type(exc).__name__}); reading all product paths", flush=True)
+            print(f"  in-list failed for {host} ({type(exc).__name__}); reading paths containing {needle}", flush=True)
             found = await fetch_report_rows(
                 run_report,
                 property_id,
@@ -157,7 +185,7 @@ async def _rows_for_host(run_report, property_id: str, host: str, paths: list[st
                 metrics=["screenPageViews"],
                 start=start,
                 end=end,
-                dimension_filter=_and(_exact("hostName", host), _contains("pagePath", "/product")),
+                dimension_filter=_and(_exact("hostName", host), _contains("pagePath", needle)),
             )
             wanted = {path.lower() for path in paths}
             found = [row for row in found if row["dimension_values"][1]["value"].lower() in wanted]
@@ -165,59 +193,68 @@ async def _rows_for_host(run_report, property_id: str, host: str, paths: list[st
     return rows
 
 
-async def build() -> dict[str, dict[str, list[list[int]]]]:
-    start, end, content_paths = _load_content_paths()
-    from analytics_mcp.tools.reporting.core import run_report
-
+async def _build_kind(run_report, kind: str, needle: str, classifier, slots: dict[str, int]) -> dict:
+    start, end, content_paths = _load_content_paths(kind, needle)
     origin: dict[str, dict[str, list[list[int]]]] = {}
-    info = parse_service_account(os.environ.get("GA4_SERVICE_ACCOUNT_JSON"))
-    with ServiceAccountCredentials(info):
-        for host, paths in sorted(content_paths.items()):
-            property_id = HOST_PROPERTY[host]
-            print(f"{host} via {property_id}: {len(paths)} product paths", flush=True)
-            rows = await _rows_for_host(run_report, property_id, host, paths, start, end)
-            buckets: dict[str, dict[int, list[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0, 0]))
-            known = {path.lower(): path for path in paths}
-            for row in rows:
-                date = row["dimension_values"][0]["value"]
-                page = row["dimension_values"][1]["value"]
-                referrer = row["dimension_values"][2]["value"]
-                views = int(float(row["metric_values"][0]["value"] or 0))
-                if views <= 0:
-                    continue
-                canonical = known.get(page.lower())
-                if not canonical:
-                    continue
-                day = _day_index(iso_from_ga4(date), start)
-                slot = {"recipe": 0, "listing": 1, "other": 2}[referrer_class(referrer)]
-                buckets[canonical][day][slot] += views
-            host_out = {}
-            for path, days in buckets.items():
-                records = [
-                    [day, counts[0], counts[1], counts[2]]
-                    for day, counts in sorted(days.items())
-                    if any(counts)
-                ]
-                if records:
-                    host_out[path] = records
-            origin[host] = host_out
-            print(f"  {len(rows)} source rows -> {len(host_out)} paths", flush=True)
+    for host, paths in sorted(content_paths.items()):
+        property_id = HOST_PROPERTY[host]
+        print(f"{kind} {host} via {property_id}: {len(paths)} paths", flush=True)
+        rows = await _rows_for_host(run_report, property_id, host, paths, start, end, needle)
+        buckets: dict[str, dict[int, list[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0, 0]))
+        known = {path.lower(): path for path in paths}
+        for row in rows:
+            date = row["dimension_values"][0]["value"]
+            page = row["dimension_values"][1]["value"]
+            referrer = row["dimension_values"][2]["value"]
+            views = int(float(row["metric_values"][0]["value"] or 0))
+            if views <= 0:
+                continue
+            canonical = known.get(page.lower())
+            if not canonical:
+                continue
+            day = _day_index(iso_from_ga4(date), start)
+            buckets[canonical][day][slots[classifier(referrer)]] += views
+        host_out = {}
+        for path, days in buckets.items():
+            records = [
+                [day, counts[0], counts[1], counts[2]]
+                for day, counts in sorted(days.items())
+                if any(counts)
+            ]
+            if records:
+                host_out[path] = records
+        origin[host] = host_out
+        print(f"  {len(rows)} source rows -> {len(host_out)} paths", flush=True)
     return origin
 
 
-def write_origin(origin: dict) -> Path:
+async def build() -> tuple[dict, dict]:
+    from analytics_mcp.tools.reporting.core import run_report
+
+    info = parse_service_account(os.environ.get("GA4_SERVICE_ACCOUNT_JSON"))
+    product_slots = {"recipe": 0, "listing": 1, "other": 2}
+    recipe_slots = {"product": 0, "listing": 1, "other": 2}
+    with ServiceAccountCredentials(info):
+        product = await _build_kind(run_report, "product", "/product", referrer_class, product_slots)
+        recipe = await _build_kind(run_report, "recipe", "/recipe", recipe_referrer_class, recipe_slots)
+    return product, recipe
+
+
+def write_origin(product: dict, recipe: dict) -> Path:
     target = REPO / "product-origin.js"
-    payload = json.dumps(origin, ensure_ascii=False, separators=(",", ":"))
-    if "private_key" in payload or "service_account" in payload:
+    product_payload = json.dumps(product, ensure_ascii=False, separators=(",", ":"))
+    recipe_payload = json.dumps(recipe, ensure_ascii=False, separators=(",", ":"))
+    source = f"window.GA4_PRODUCT_ORIGIN={product_payload};\nwindow.GA4_RECIPE_ORIGIN={recipe_payload};\n"
+    if "private_key" in source or "service_account" in source:
         raise SystemExit("Refusing to write credentials into product-origin.js")
-    target.write_text(f"window.GA4_PRODUCT_ORIGIN={payload};\n", encoding="utf-8")
+    target.write_text(source, encoding="utf-8")
     print(f"Wrote {target.name} ({target.stat().st_size} bytes)", flush=True)
     return target
 
 
 def main() -> None:
-    origin = asyncio.run(build())
-    write_origin(origin)
+    product, recipe = asyncio.run(build())
+    write_origin(product, recipe)
 
 
 if __name__ == "__main__":
