@@ -755,13 +755,22 @@
     if(!path.startsWith("/")||path.startsWith("//"))return"";
     return"https://"+host+path;
   }
+  const TITLE_LANG_MARKERS=/\b(?:para|los|las|del|receta|recetas|productos|hogar|carne|cerdo|arroz|pollo|frijoles|soya|de|con|recette|recettes|pour|trempette|saus|kecap|tiram|resep|produk|beranda|ayam|dengan|bubuk|jamur|minyak|wijen|cuka|rezept|rezepte|sojasauce|knoblauch|recepten|heerlijke|sauzen|strona|znaleziona)\b/iu;
   function needsTitleTranslation(title){
-    for(const ch of String(title??"")){
+    const text=String(title??"");
+    let han=0,latin=0,other=0,accent=false;
+    for(const ch of text){
       if(!/\p{L}/u.test(ch))continue;
-      if(/\p{Script=Latin}/u.test(ch)||/\p{Script=Han}/u.test(ch))continue;
-      return true;
+      if(/\p{Script=Han}/u.test(ch))han++;
+      else if(/\p{Script=Latin}/u.test(ch)){
+        latin++;
+        if(!/[A-Za-z]/.test(ch))accent=true;
+      }else other++;
     }
-    return false;
+    if(other)return true;
+    if(han>latin)return false;
+    if(accent)return true;
+    return TITLE_LANG_MARKERS.test(text);
   }
   function contentNameHtml(item,linkPages,markTitles){
     const raw=String(item.title??""),safe=esc(raw);
