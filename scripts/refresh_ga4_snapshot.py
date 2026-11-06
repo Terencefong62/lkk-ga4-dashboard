@@ -1137,7 +1137,7 @@ def _write_global(repo_root: Path, script_name: str, global_name: str, value: ob
 def _bump_cache(index_text: str, token: str) -> str:
     pattern = re.compile(
         r'(src="\./(?:data|duration|extensions|magnetic|refresh|sources|'
-        r'drivers-complete|drivers-country-extra|delta-[\d-]+)\.js)\?v=[^"]*"'
+        r'drivers-complete|drivers-country-extra|product-origin|delta-[\d-]+)\.js)\?v=[^"]*"'
     )
     updated, count = pattern.subn(lambda match: f'{match.group(1)}?v={token}"', index_text)
     if count < 8:

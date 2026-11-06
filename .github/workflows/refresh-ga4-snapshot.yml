@@ -69,6 +69,11 @@ jobs:
       - name: Publish live snapshot files
         run: python scripts/refresh_ga4_snapshot.py --from-json snapshot-refresh/ga4-snapshot.json --publish-live
 
+      - name: Refresh product page origins
+        env:
+          GA4_SERVICE_ACCOUNT_JSON: ${{ secrets.GA4_SERVICE_ACCOUNT_JSON }}
+        run: python scripts/fetch_product_origin.py
+
       - name: Commit live snapshot to main
         run: |
           set -euo pipefail
@@ -84,6 +89,7 @@ jobs:
             drivers-complete.js \
             drivers-country-extra.js \
             index.html \
+            product-origin.js \
             chunks \
             delta-*.js
           if git diff --cached --name-only | grep -E '(snapshot-refresh|service.account|service_account|ga4-mcp-|ga4-sa-)'; then

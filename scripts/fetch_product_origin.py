@@ -1,0 +1,224 @@
+#!/usr/bin/env python3
+"""Build product-origin.js: where each product detail page's views came from.
+
+The previous page (GA4 pageReferrer) is classed as:
+  recipe detail   /recipe/{slug} or /recipes/{slug}
+  product listing /products, or /products/saucetype/...
+  other           everything else, including another product detail page
+
+Daily counts follow the dashboard's day index (dataStart = day 0) so the
+selected period can sum them. The service-account JSON is never written.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import base64
+import json
+import os
+import re
+import sys
+from collections import defaultdict
+from pathlib import Path
+from urllib.parse import urlparse
+
+REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from refresh_ga4_snapshot import (  # noqa: E402
+    ServiceAccountCredentials,
+    fetch_report_rows,
+    iso_from_ga4,
+    parse_service_account,
+)
+
+# Property that actually owns each consumer host. Leakage from another
+# property (a handful of page views recorded under the USA property, for
+# example) is ignored.
+HOST_PROPERTY = {
+    "usa.lkk.com": "398685110",
+    "hk.lkk.com": "377253102",
+    "ca.lkk.com": "370921236",
+    "au.lkk.com": "370583564",
+    "nz.lkk.com": "370583564",
+    "malaysia.lkk.com": "367098012",
+    "sg.lkk.com": "367881323",
+    "tw.lkk.com": "372928120",
+    "jp.lkk.com": "359271345",
+    "kr.lkk.com": "365539943",
+    "in.lkk.com": "364795029",
+    "vn.lkk.com": "368579958",
+    "id.lkk.com": "365064368",
+    "ph.lkk.com": "367186392",
+    "csa.lkk.com": "365051596",
+    "eu.lkk.com": "365568280",
+}
+
+RECIPE_DETAIL = re.compile(r"/recipes?/[^/?#]+", re.IGNORECASE)
+PRODUCT_LISTING = re.compile(r"/products(?:/saucetype(?:/[^/?#]*)?)?$", re.IGNORECASE)
+
+
+def referrer_class(url: str) -> str:
+    """Return recipe, listing, or other for a GA4 pageReferrer value."""
+    text = (url or "").strip()
+    if not text or text == "(not set)":
+        return "other"
+    path = urlparse(text).path if "://" in text else text
+    path = path.split("?", 1)[0].rstrip("/")
+    if RECIPE_DETAIL.search(path):
+        return "recipe"
+    if PRODUCT_LISTING.search(path):
+        return "listing"
+    return "other"
+
+
+def _load_content_paths() -> tuple[str, str, dict[str, list[str]]]:
+    encoded = []
+    chunk_dir = REPO / "chunks"
+    files = sorted(
+        (p for p in chunk_dir.glob("data-*.js") if re.fullmatch(r"data-\d+\.js", p.name)),
+        key=lambda p: int(p.name.split("-")[1].split(".")[0]),
+    )
+    for path in files:
+        match = re.search(r'push\("([^"]*)"\)', path.read_text(encoding="utf-8"))
+        if not match:
+            raise SystemExit(f"Could not read data chunk {path.name}")
+        encoded.append(match.group(1))
+    source = base64.b64decode("".join(encoded)).decode("utf-8")
+    marker = "window.GA4_DATA="
+    payload = json.loads(source[source.index(marker) + len(marker) :].rstrip().rstrip(";"))
+    paths: dict[str, list[str]] = {}
+    for key, kinds in (payload.get("content") or {}).items():
+        product = (kinds or {}).get("product") or {}
+        values = []
+        for pair in product.get("paths") or []:
+            if not pair:
+                continue
+            page = str(pair[0])
+            if "/product" in page.lower():
+                values.append(page)
+        if values and key in HOST_PROPERTY:
+            paths[key] = sorted(set(values))
+    return payload["dataStart"], payload["dataEnd"], paths
+
+
+def _contains(field: str, value: str) -> dict:
+    return {
+        "filter": {
+            "field_name": field,
+            "string_filter": {"match_type": "CONTAINS", "value": value, "case_sensitive": False},
+        }
+    }
+
+
+def _exact(field: str, value: str) -> dict:
+    return {
+        "filter": {
+            "field_name": field,
+            "string_filter": {"match_type": "EXACT", "value": value, "case_sensitive": False},
+        }
+    }
+
+
+def _in_list(field: str, values: list[str]) -> dict:
+    return {"filter": {"field_name": field, "in_list_filter": {"values": values, "case_sensitive": False}}}
+
+
+def _and(*parts: dict) -> dict:
+    return {"and_group": {"expressions": list(parts)}}
+
+
+def _day_index(date: str, start: str) -> int:
+    from datetime import date as date_cls
+
+    return (date_cls.fromisoformat(date) - date_cls.fromisoformat(start)).days
+
+
+async def _rows_for_host(run_report, property_id: str, host: str, paths: list[str], start: str, end: str):
+    batches = [paths[index : index + 40] for index in range(0, len(paths), 40)]
+    rows = []
+    for batch in batches:
+        try:
+            found = await fetch_report_rows(
+                run_report,
+                property_id,
+                dimensions=["date", "pagePath", "pageReferrer"],
+                metrics=["screenPageViews"],
+                start=start,
+                end=end,
+                dimension_filter=_and(_exact("hostName", host), _in_list("pagePath", batch)),
+            )
+        except Exception as exc:
+            print(f"  in-list failed for {host} ({type(exc).__name__}); reading all product paths", flush=True)
+            found = await fetch_report_rows(
+                run_report,
+                property_id,
+                dimensions=["date", "pagePath", "pageReferrer"],
+                metrics=["screenPageViews"],
+                start=start,
+                end=end,
+                dimension_filter=_and(_exact("hostName", host), _contains("pagePath", "/product")),
+            )
+            wanted = {path.lower() for path in paths}
+            found = [row for row in found if row["dimension_values"][1]["value"].lower() in wanted]
+        rows.extend(found)
+    return rows
+
+
+async def build() -> dict[str, dict[str, list[list[int]]]]:
+    start, end, content_paths = _load_content_paths()
+    from analytics_mcp.tools.reporting.core import run_report
+
+    origin: dict[str, dict[str, list[list[int]]]] = {}
+    info = parse_service_account(os.environ.get("GA4_SERVICE_ACCOUNT_JSON"))
+    with ServiceAccountCredentials(info):
+        for host, paths in sorted(content_paths.items()):
+            property_id = HOST_PROPERTY[host]
+            print(f"{host} via {property_id}: {len(paths)} product paths", flush=True)
+            rows = await _rows_for_host(run_report, property_id, host, paths, start, end)
+            buckets: dict[str, dict[int, list[int]]] = defaultdict(lambda: defaultdict(lambda: [0, 0, 0]))
+            known = {path.lower(): path for path in paths}
+            for row in rows:
+                date = row["dimension_values"][0]["value"]
+                page = row["dimension_values"][1]["value"]
+                referrer = row["dimension_values"][2]["value"]
+                views = int(float(row["metric_values"][0]["value"] or 0))
+                if views <= 0:
+                    continue
+                canonical = known.get(page.lower())
+                if not canonical:
+                    continue
+                day = _day_index(iso_from_ga4(date), start)
+                slot = {"recipe": 0, "listing": 1, "other": 2}[referrer_class(referrer)]
+                buckets[canonical][day][slot] += views
+            host_out = {}
+            for path, days in buckets.items():
+                records = [
+                    [day, counts[0], counts[1], counts[2]]
+                    for day, counts in sorted(days.items())
+                    if any(counts)
+                ]
+                if records:
+                    host_out[path] = records
+            origin[host] = host_out
+            print(f"  {len(rows)} source rows -> {len(host_out)} paths", flush=True)
+    return origin
+
+
+def write_origin(origin: dict) -> Path:
+    target = REPO / "product-origin.js"
+    payload = json.dumps(origin, ensure_ascii=False, separators=(",", ":"))
+    if "private_key" in payload or "service_account" in payload:
+        raise SystemExit("Refusing to write credentials into product-origin.js")
+    target.write_text(f"window.GA4_PRODUCT_ORIGIN={payload};\n", encoding="utf-8")
+    print(f"Wrote {target.name} ({target.stat().st_size} bytes)", flush=True)
+    return target
+
+
+def main() -> None:
+    origin = asyncio.run(build())
+    write_origin(origin)
+
+
+if __name__ == "__main__":
+    main()
