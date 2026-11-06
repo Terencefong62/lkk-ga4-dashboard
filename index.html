@@ -49,6 +49,17 @@
     @media(max-width:1100px){.grid{grid-template-columns:1fr}.rail{display:contents}.main{order:1}.engaged{order:2}.ranking{order:3}.engaged .focus-head{flex-direction:row;align-items:baseline;gap:12px}.engaged .focus-head h3{font-size:18px}.engaged .sub{text-align:right}.kpis{grid-template-columns:repeat(3,1fr)}.content-grid{grid-template-columns:repeat(5,280px)}}
     @media(max-width:900px){.toolbar{grid-template-columns:repeat(4,minmax(0,1fr))}}
     @media(max-width:680px){.shell{padding:16px 14px 34px}.topbar{align-items:stretch;flex-direction:column}.live-stack{align-items:stretch;max-width:none;width:100%}#refreshed-at{text-align:left}.live{padding:8px 12px;max-width:none;width:100%;border-radius:16px}.live-sep{display:none}.desktop-note{display:none}.toolbar{grid-template-columns:repeat(2,minmax(0,1fr));top:6px}.kpis{grid-template-columns:1fr 1fr}.main,.ranking,.engaged,.bot-panel{padding:17px}.panel-head,.section-head{align-items:flex-start;flex-direction:column}.chart-toolbar{justify-content:stretch}.chart-toolbar .type-buttons{flex:1 1 100%;min-width:0;width:100%}.chart-wrap{min-height:250px}.donuts,.bot-donuts,.bot-stats{grid-template-columns:1fr}.content-grid{grid-template-columns:repeat(5,260px)}.footer-source{flex-direction:column}}
+    .focus-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0}
+    .title-lang{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px}
+    .title-lang[hidden]{display:none}
+    .title-lang-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+    .title-lang-choices{display:inline-flex;background:#fff;border:1px solid #ece9e3;border-radius:999px;padding:2px}
+    .title-lang-choices button{border:0;background:transparent;color:#625e5b;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;cursor:pointer;line-height:1.3}
+    .title-lang-choices button[aria-pressed="true"]{background:var(--ink);color:#fff}
+    .title-lang-choices button:focus-visible{outline:2px solid #315b8a;outline-offset:2px}
+    .title-lang-note{font-size:11px;color:var(--muted);line-height:1.3}
+    .title-lang-note:empty{display:none}
+    .title-lang-note.is-error{color:var(--red)}
   </style>
 </head>
 <body>
@@ -98,7 +109,20 @@
         <article class="donut-card"><h3>Device</h3><div class="donut-body" id="donut-device"></div></article>
       </div>
       <div class="focus-content" id="focus-content" hidden>
-        <div class="focus-head"><h3 id="focus-title">Top 5 products and recipes</h3><div class="sub" id="focus-sub"></div></div>
+        <div class="focus-head">
+          <div class="focus-title-row">
+            <h3 id="focus-title">Top 5 products and recipes</h3>
+            <div class="title-lang" id="title-lang" hidden>
+              <span class="title-lang-label">Translate</span>
+              <div class="title-lang-choices" role="group" aria-label="Translate names">
+                <button type="button" data-title-lang="en" aria-pressed="false">English</button>
+                <button type="button" data-title-lang="zh-CN" aria-pressed="false">中文</button>
+              </div>
+              <span class="title-lang-note" id="title-lang-note" role="status"></span>
+            </div>
+          </div>
+          <div class="sub" id="focus-sub"></div>
+        </div>
         <div class="focus-grid">
           <div class="focus-col" id="focus-products"></div>
           <div class="focus-col" id="focus-recipes"></div>
@@ -717,27 +741,36 @@
     if(!path.startsWith("/")||path.startsWith("//"))return"";
     return"https://"+host+path;
   }
-  function contentNameHtml(item,linkPages){
-    const title=esc(item.title);
-    if(!linkPages)return title;
-    const href=contentPageUrl(item);
-    if(!href)return title;
-    return'<a href="'+esc(href)+'" target="_blank" rel="noopener">'+title+'</a>';
+  function needsTitleTranslation(title){
+    for(const ch of String(title??"")){
+      if(!/\p{L}/u.test(ch))continue;
+      if(/\p{Script=Latin}/u.test(ch)||/\p{Script=Han}/u.test(ch))continue;
+      return true;
+    }
+    return false;
   }
-  function contentList(r,showPct,bars=false,showMarket=false,linkPages=false){
+  function contentNameHtml(item,linkPages,markTitles){
+    const raw=String(item.title??""),safe=esc(raw);
+    const body=markTitles&&needsTitleTranslation(raw)?'<span class="js-title" data-original="'+esc(raw)+'">'+safe+'</span>':safe;
+    if(!linkPages)return body;
+    const href=contentPageUrl(item);
+    if(!href)return body;
+    return'<a href="'+esc(href)+'" target="_blank" rel="noopener">'+body+'</a>';
+  }
+  function contentList(r,showPct,bars=false,showMarket=false,linkPages=false,markTitles=false){
     if(r===null)return'<div class="empty">No matching section</div>';
     if(!r.items.length)return'<div class="empty">No attributed '+contentUnit+' in this period</div>';
     const max=r.items[0].value||1;
     const head=showPct?'<div class="item item-head"><span></span><span></span><span class="item-value">Page views</span><span class="item-pct">Share</span></div>':'';
     return head+r.items.map((x,i)=>{
       const bar=bars&&x.origin?originMarkup(x.origin):(bars?'<div class="item-bar"><span style="width:'+Math.max(3,x.value/max*100)+'%"></span></div>':'');
-      return'<div class="item"><span class="item-rank">'+(i+1)+'</span><span class="item-name">'+contentNameHtml(x,linkPages)+(showMarket&&x.market?' <span class="item-market">'+esc(x.market)+'</span>':'')+'</span><span class="item-value">'+fmt(x.value)+'</span>'+(showPct?'<span class="item-pct">'+x.pct.toFixed(1)+'%</span>':'<span class="item-pct"></span>')+bar+'</div>';
+      return'<div class="item"><span class="item-rank">'+(i+1)+'</span><span class="item-name">'+contentNameHtml(x,linkPages,markTitles)+(showMarket&&x.market?' <span class="item-market">'+esc(x.market)+'</span>':'')+'</span><span class="item-value">'+fmt(x.value)+'</span>'+(showPct?'<span class="item-pct">'+x.pct.toFixed(1)+'%</span>':'<span class="item-pct"></span>')+bar+'</div>';
     }).join("");
   }
-  function contentSection(label,r,showPct,bars=false,showMarket=false,linkPages=false){
+  function contentSection(label,r,showPct,bars=false,showMarket=false,linkPages=false,markTitles=false){
     const originKind=bars&&r&&r.items&&(r.items.find(x=>x.origin)||{}).origin?.kind;
     const legend=originKind?'<div class="origin-legend">'+ORIGIN_LABELS[originKind].map(([cls,label])=>'<span><i class="'+cls+'"></i>'+label+'</span>').join("")+'</div>':'';
-    return'<div class="list-title"><span>'+label+'</span>'+(r?'<span class="list-total">'+fmt(r.total)+' '+contentUnit+'</span>':'')+'</div>'+legend+contentList(r,showPct,bars,showMarket,linkPages)}
+    return'<div class="list-title"><span>'+label+'</span>'+(r?'<span class="list-total">'+fmt(r.total)+' '+contentUnit+'</span>':'')+'</div>'+legend+contentList(r,showPct,bars,showMarket,linkPages,markTitles)}
   const DONUT_COLORS=["#b20e18","#e32d39","#315b8a","#8a7d72","#147a55"],DONUT_OTHER="#c4b8aa",DONUT_EXTRA=["#9d9084","#8f8378","#81766c","#736a61","#655e56"];
   const donutExpanded={source:false,country:false,device:false,botCountry:false,botSource:false};
   const BOT_SOURCE_UNSPLIT="China 0–3s (no source split)",BOT_COUNTRY_UNSPLIT="Unknown / not split by country";
@@ -864,8 +897,90 @@
     $("#focus-title").textContent="Top 5 products and recipes";
     $("#focus-sub").textContent=(isTotal(keyOf(domain))?"all domains":domain.host)+" · "+dateFmt(state.start)+" – "+dateFmt(state.end);
     const showMarket=isTotal(keyOf(domain));
-    $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true,showMarket,true);
-    $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true,showMarket,true);
+    $("#focus-products").innerHTML=contentSection("Top products",contentRanks(keyOf(domain),"product"),true,true,showMarket,true,true);
+    $("#focus-recipes").innerHTML=contentSection("Top recipes",contentRanks(keyOf(domain),"recipe"),true,true,showMarket,true,true);
+    syncTitleLang();
+  }
+  let titleLang="",titleLangToken=0;
+  const titleCache=new Map();
+  function titleStoreKey(text,tl){return tl+"\u0001"+text}
+  function readTitleCache(text,tl){
+    const key=titleStoreKey(text,tl);
+    if(titleCache.has(key))return titleCache.get(key);
+    try{
+      const raw=sessionStorage.getItem("lkk-title:"+key);
+      if(raw){titleCache.set(key,raw);return raw}
+    }catch(e){}
+    return null;
+  }
+  function writeTitleCache(text,tl,value){
+    const key=titleStoreKey(text,tl);
+    titleCache.set(key,value);
+    try{sessionStorage.setItem("lkk-title:"+key,value)}catch(e){}
+  }
+  function setTitleNote(text,isError){const note=$("#title-lang-note");if(!note)return;note.textContent=text||"";note.classList.toggle("is-error",!!isError&&!!text)}
+  function paintTitleLang(){
+    document.querySelectorAll("#title-lang [data-title-lang]").forEach(btn=>{
+      const on=!!titleLang&&btn.dataset.titleLang===titleLang;
+      btn.setAttribute("aria-pressed",on?"true":"false");
+      btn.title=on?"Show the original names":(btn.dataset.titleLang==="zh-CN"?"Translate names into Chinese":"Translate names into English");
+    });
+  }
+  function titleNodes(){return [...document.querySelectorAll("#focus-content .js-title")]}
+  async function fetchTitleTranslation(text,tl){
+    const url="https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="+encodeURIComponent(tl)+"&dt=t&q="+encodeURIComponent(text);
+    let lastError;
+    for(let attempt=0;attempt<2;attempt++){
+      try{
+        const res=await fetch(url);
+        if(!res.ok)throw new Error(String(res.status));
+        const data=await res.json();
+        if(!Array.isArray(data?.[0]))throw new Error("bad");
+        const out=data[0].map(seg=>Array.isArray(seg)&&typeof seg[0]==="string"?seg[0]:"").join("");
+        if(!out.trim())throw new Error("empty");
+        return out;
+      }catch(err){
+        lastError=err;
+        if(attempt===0)await new Promise(r=>setTimeout(r,450));
+      }
+    }
+    throw lastError;
+  }
+  async function applyTitleLang(){
+    const token=++titleLangToken,lang=titleLang,nodes=titleNodes();
+    if(!lang){
+      nodes.forEach(n=>{n.textContent=n.dataset.original||"";n.removeAttribute("title")});
+      setTitleNote("");
+      return;
+    }
+    let failed=0;
+    if(nodes.some(n=>readTitleCache(n.dataset.original||"",lang)==null))setTitleNote("Translating…");
+    await Promise.all(nodes.map(async (n,i)=>{
+      const original=n.dataset.original||"";
+      const cached=readTitleCache(original,lang);
+      if(cached!=null){
+        if(token===titleLangToken&&n.isConnected){n.textContent=cached;n.title=original}
+        return;
+      }
+      if(i)await new Promise(r=>setTimeout(r,i*90));
+      try{
+        const translated=await fetchTitleTranslation(original,lang);
+        writeTitleCache(original,lang,translated);
+        if(token===titleLangToken&&titleLang===lang&&n.isConnected){n.textContent=translated;n.title=original}
+      }catch(err){
+        failed++;
+        if(token===titleLangToken&&titleLang===lang&&n.isConnected){n.textContent=original;n.removeAttribute("title")}
+      }
+    }));
+    if(token!==titleLangToken||titleLang!==lang)return;
+    setTitleNote(failed?(failed===nodes.length?"Translation unavailable":"Some names could not be translated"):"",!!failed);
+  }
+  function syncTitleLang(){
+    const box=$("#title-lang"),show=!!$("#focus-content")&&!$("#focus-content").hidden&&titleNodes().length>0;
+    if(box)box.hidden=!show;
+    paintTitleLang();
+    if(!show){setTitleNote("");return}
+    applyTitleLang();
   }
   const seriesDayCache=new Map();
   function seriesByDay(key){
@@ -933,6 +1048,14 @@
     const ranked=D.domains.map(d=>({...d,value:total(keyOf(d),"views")})).sort((a,b)=>b.value-a.value).slice(0,5);
     $("#content-grid").innerHTML=ranked.map(d=>{const product=contentRanks(keyOf(d),"product"),recipe=contentRanks(keyOf(d),"recipe");return'<article class="market"><div class="rank-head"><strong>'+esc(d.label)+'</strong> <span class="host">'+esc(d.host)+'</span></div><div class="market-body">'+contentSection("Top products",product,true)+'<div class="divider"></div>'+contentSection("Top recipes",recipe,true)+'</div></article>'}).join("");
   }
+  $("#title-lang").addEventListener("click",e=>{
+    const btn=e.target.closest("[data-title-lang]");
+    if(!btn)return;
+    const next=btn.dataset.titleLang||"";
+    titleLang=titleLang===next?"":next;
+    paintTitleLang();
+    applyTitleLang();
+  });
   $("#bot-filter").addEventListener("change",e=>{state.botFilter=e.target.checked;render()});
   $("#domain").addEventListener("change",e=>{state.host=e.target.value;syncCompareTotalOption();render()});
   $("#compare").addEventListener("change",e=>{const next=e.target.value;state.compare=(next===state.host||(isTotal(state.host)&&isTotal(next)))?"":next;if(!state.compare)e.target.value="";if(state.compare){state.periodCompare="";$("#period-compare").value=""}render()});
