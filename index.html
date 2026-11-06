@@ -923,10 +923,10 @@
       const shown=item.recipes.slice(0,6),rest=item.recipes.length-shown.length;
       const recipes=shown.map(recipe=>{
         const pct=item.productViews?recipe.views/item.productViews*100:0;
-        return '<div class="engaged-recipe"><i></i><b>'+esc(recipe.title)+'</b><span>'+engagedCount(recipe.views)+' · '+pct.toFixed(1)+'% of this product detail page traffic</span></div>';
+        return '<div class="engaged-recipe"><i></i><b>'+esc(recipe.title)+'</b><span>'+engagedCount(recipe.views)+' · '+pct.toFixed(1)+'% of page traffic</span></div>';
       }).join("")+(rest?'<div class="engaged-recipe"><i style="visibility:hidden"></i><b>'+rest+' more recipe page'+(rest===1?'':'s')+'</b><span></span></div>':'');
       const market=showMarket?' <span class="item-market">'+esc(item.market)+'</span>':'';
-      return '<article class="engaged-card"><div class="engaged-top"><span class="engaged-rank">'+(i+1)+'</span><div class="engaged-name">'+esc(item.title)+market+'</div><div class="engaged-stat"><b>'+engagedCount(item.fromRecipes)+'</b> '+share.toFixed(1)+'% of this product detail page traffic</div></div><div class="engaged-recipes">'+recipes+'</div></article>';
+      return '<article class="engaged-card"><div class="engaged-top"><span class="engaged-rank">'+(i+1)+'</span><div class="engaged-name">'+esc(item.title)+market+'</div><div class="engaged-stat"><b>'+engagedCount(item.fromRecipes)+'</b> '+share.toFixed(1)+'% of page traffic</div></div><div class="engaged-recipes">'+recipes+'</div></article>';
     }).join("");
   }
   function renderContent(){
